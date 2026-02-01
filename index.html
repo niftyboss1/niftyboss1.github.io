@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>XCP Open Dispensers</title>
+
+<style>
+body {
+    background: #0e1117;
+    color: #e5e7eb;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 20px;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 8px;
+}
+
+button.secondary {
+    background: #374151;
+}
+
+button.active {
+    background: #16a34a;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: #0e1117;
+    z-index: 2;
+}
+
+tfoot td {
+    position: sticky;
+    bottom: 0;
+    background: #161b22;
+    z-index: 2;
+    font-weight: 700;
+}
+
+th, td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #30363d;
+    text-align: right;
+}
+
+th {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+th.addr, td.addr {
+    text-align: left;
+}
+
+td.numeric {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.highlight {
+    background: #1f2937;
+    font-weight: 700;
+    border-radius: 4px;
+}
+
+#status {
+    margin-left: 10px;
+    color: #9ca3af;
+}
+
+a,
+a:visited {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.verified {
+    color: #22c55e;
+    font-size: 18px;
+    text-align: center;
+    cursor: help;
+}
+
+.multi {
+    font-size: 18px;
+    text-align: center;
+    cursor: help;
+}
+</style>
+</head>
+
+<body>
+
+<h2>
+Dynamic list of open XCP dispensers, maintained by
+<a href="https://x.com/niftyboss1" target="_blank">Niftyboss1</a>
+</h2>
+
+<button id="loadBtn">Load Open XCP Dispensers</button>
+<button id="verifiedFilterBtn" class="secondary">Show Verified Only</button>
+<span id="status"></span>
+
+<div style="margin-top: 16px; margin-bottom: 6px; color: #9ca3af; line-height: 1.5;">
+    <p>
+        To buy XCP, trigger these dispensers using a Counterparty wallet.
+        (see list at
+        <a href="https://counterparty.io" target="_blank">counterparty.io</a>)
+    </p>
+    <p>
+        <strong>Important note:</strong> Experimental page, DYOR.
+        Always cross-check with TokenScan and/or Horizon.
+    </p>
+</div>
+
+<div id="lastUpdated" style="color:#6b7280; font-size: 0.9em; margin-bottom: 6px;">
+    Last updated: —
+</div>
+
+<table>
+<thead>
+<tr>
+    <th class="addr">Source Address</th>
+    <th>Verified</th>
+    <th>Multidispenser</th>
+    <th>Give Remaining (XCP)</th>
+    <th>Satoshirate</th>
+    <th>URLs</th>
+</tr>
+</thead>
+
+<tbody id="rows"></tbody>
+
+<tfoot>
+<tr>
+    <td class="addr">Total</td>
+    <td></td>
+    <td></td>
+    <td id="totalGiveRemaining" class="numeric">0.00000000</td>
+    <td></td>
+    <td></td>
+</tr>
+</tfoot>
+</table>
+
+<script>
+const CP_API = "https://api.counterparty.io:4000/v2";
+const usNumber = new Intl.NumberFormat("en-US");
+
+const VERIFIED_ADDRESSES = new Set([
+    "bc1q2lucujpedcrjvzax4kgrpfhk92wqkhejr0g75k",
+    "bc1qn9xq3txq3qcsfet5frvxvf8ch45dkw2fwmd76a",
+    "111614QQVJUwgySi7re4eDx4i3knfa3wg",
+    "1FDVTNiW4eWK5w7SDjsJVbRabjF3uDPJ6A",
+    "14GJcX5x9GESu1scC5FvWTg6kz48AdR1ft",
+    "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc",
+    "bc1qhw7atfkv9fuem3wywcys7et6gyj72jahwqqze7",
+    "1Cs6iGVsP1KKwGMU71Cx9wmv89jAdBE6Ri"
+]);
+
+const MULTIDISPENSERS = new Set([
+    "bc1qn9xq3txq3qcsfet5frvxvf8ch45dkw2fwmd76a",
+    "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc"
+]);
+
+let allDispensers = [];
+let showVerifiedOnly = false;
+
+document.getElementById("loadBtn").onclick = loadDispensers;
+document.getElementById("verifiedFilterBtn").onclick = toggleVerifiedFilter;
+
+async function loadDispensers() {
+    const btn = document.getElementById("loadBtn");
+    btn.disabled = true;
+    document.getElementById("status").textContent =
+        " Loading open XCP dispensers...";
+
+    const res = await fetch(
+        `${CP_API}/assets/XCP/dispensers?status=0&asset=XCP&limit=15000`
+    );
+    const json = await res.json();
+
+    allDispensers = (json.result || [])
+        .filter(d =>
+            d.give_quantity === 100000000 &&
+            (d.give_remaining || 0) >= 10 * 1e8
+        )
+        .sort((a, b) => a.satoshirate - b.satoshirate);
+
+    updateLastUpdated();
+    renderTable();
+
+    btn.disabled = false;
+    document.getElementById("status").textContent = "";
+}
+
+function updateLastUpdated() {
+    const el = document.getElementById("lastUpdated");
+    el.textContent =
+        "Last updated: " +
+        new Date().toLocaleString();
+}
+
+function toggleVerifiedFilter() {
+    showVerifiedOnly = !showVerifiedOnly;
+    const btn = document.getElementById("verifiedFilterBtn");
+    btn.classList.toggle("active", showVerifiedOnly);
+    btn.textContent = showVerifiedOnly
+        ? "Showing Verified Only"
+        : "Show Verified Only";
+    renderTable();
+}
+
+function renderTable() {
+    const rows = document.getElementById("rows");
+    rows.innerHTML = "";
+
+    let totalGiveRemaining = 0;
+
+    allDispensers
+        .filter(d => !showVerifiedOnly || VERIFIED_ADDRESSES.has(d.source))
+        .forEach(d => {
+            totalGiveRemaining += d.give_remaining || 0;
+
+            const isVerified = VERIFIED_ADDRESSES.has(d.source);
+            const isMulti = MULTIDISPENSERS.has(d.source);
+
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+<td class="addr">${d.source}</td>
+
+<td class="verified"
+    title="This is a Niftyboss1 verified dispenser">
+    ${isVerified ? "✔️" : ""}
+</td>
+
+<td class="multi"
+    title="This is a multidispenser (XCP, PEPECASH)">
+    ${isMulti ? "&#x1F381;" : ""}
+</td>
+
+<td class="numeric highlight">
+    ${(d.give_remaining / 1e8).toFixed(8)}
+</td>
+
+<td class="numeric">
+    ${usNumber.format(d.satoshirate)}
+</td>
+
+<td class="numeric">
+    <a href="https://tokenscan.io/tx/${d.tx_hash}" target="_blank">TokenScan</a>
+    |
+    <a href="https://horizon.market/explorer/tx/${d.tx_hash}" target="_blank">Horizon</a>
+</td>
+            `;
+            rows.appendChild(tr);
+        });
+
+    document.getElementById("totalGiveRemaining").textContent =
+        (totalGiveRemaining / 1e8).toFixed(8);
+}
+</script>
+
+</body>
+</html>
