@@ -5,15 +5,35 @@
 <title>XCP Open Dispensers</title>
 
 <style>
+:root {
+    --bg: #0e1117;
+    --bg-alt: #161b22;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #30363d;
+    --link: #60a5fa;
+    --button: #2563eb;
+}
+
+.light {
+    --bg: #f9fafb;
+    --bg-alt: #e5e7eb;
+    --text: #111827;
+    --muted: #4b5563;
+    --border: #d1d5db;
+    --link: #2563eb;
+    --button: #1d4ed8;
+}
+
 body {
-    background: #0e1117;
-    color: #e5e7eb;
+    background: var(--bg);
+    color: var(--text);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     padding: 20px;
 }
 
 button {
-    background: #2563eb;
+    background: var(--button);
     color: white;
     border: none;
     padding: 10px 18px;
@@ -23,16 +43,11 @@ button {
 }
 
 button.secondary {
-    background: #374151;
+    background: #6b7280;
 }
 
 button.active {
     background: #16a34a;
-}
-
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 table {
@@ -44,26 +59,26 @@ table {
 thead th {
     position: sticky;
     top: 0;
-    background: #0e1117;
+    background: var(--bg);
     z-index: 2;
 }
 
 tfoot td {
     position: sticky;
     bottom: 0;
-    background: #161b22;
+    background: var(--bg-alt);
     z-index: 2;
     font-weight: 700;
 }
 
 th, td {
     padding: 8px 10px;
-    border-bottom: 1px solid #30363d;
+    border-bottom: 1px solid var(--border);
     text-align: right;
 }
 
 th {
-    color: #9ca3af;
+    color: var(--muted);
     font-weight: 600;
 }
 
@@ -76,19 +91,14 @@ td.numeric {
 }
 
 .highlight {
-    background: #1f2937;
+    background: rgba(31,41,55,0.35);
     font-weight: 700;
     border-radius: 4px;
 }
 
-#status {
-    margin-left: 10px;
-    color: #9ca3af;
-}
-
 a,
 a:visited {
-    color: #60a5fa;
+    color: var(--link);
     text-decoration: none;
 }
 
@@ -109,7 +119,6 @@ a:hover {
     cursor: help;
 }
 </style>
-<script src="https://www.w3counter.com/tracker.js?id=157089"></script>
 </head>
 
 <body>
@@ -119,24 +128,18 @@ Dynamic list of open XCP dispensers, maintained by
 <a href="https://x.com/niftyboss1" target="_blank">Niftyboss1</a>
 </h2>
 
-<button id="loadBtn">Load Open XCP Dispensers</button>
 <button id="verifiedFilterBtn" class="secondary">Show Verified Only</button>
-<span id="status"></span>
+<button id="themeToggleBtn" class="secondary">Light mode</button>
 
-<div style="margin-top: 16px; margin-bottom: 6px; color: #9ca3af; line-height: 1.5;">
+<div style="margin-top:16px; margin-bottom:6px; color:var(--muted); line-height:1.5;">
     <p>
         To buy XCP, trigger these dispensers using a Counterparty wallet.
-        (see list at
-        <a href="https://counterparty.io" target="_blank">counterparty.io</a>)
+        (see list at <a href="https://counterparty.io" target="_blank">counterparty.io</a>)
     </p>
     <p>
         <strong>Important note:</strong> Experimental page, DYOR.
         Always cross-check with TokenScan and/or Horizon.
     </p>
-</div>
-
-<div id="lastUpdated" style="color:#6b7280; font-size: 0.9em; margin-bottom: 6px;">
-    Last updated: —
 </div>
 
 <table>
@@ -158,9 +161,11 @@ Dynamic list of open XCP dispensers, maintained by
     <td class="addr">Total</td>
     <td></td>
     <td></td>
-    <td id="totalGiveRemaining" class="numeric">0.00000000</td>
+    <td id="totalGiveRemaining" class="numeric">0</td>
     <td></td>
-    <td></td>
+    <td id="lastUpdated" style="text-align:right; color:var(--muted); font-weight:500;">
+        Last updated: —
+    </td>
 </tr>
 </tfoot>
 </table>
@@ -177,26 +182,44 @@ const VERIFIED_ADDRESSES = new Set([
     "14GJcX5x9GESu1scC5FvWTg6kz48AdR1ft",
     "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc",
     "bc1qhw7atfkv9fuem3wywcys7et6gyj72jahwqqze7",
-    "1Cs6iGVsP1KKwGMU71Cx9wmv89jAdBE6Ri"
+    "1Cs6iGVsP1KKwGMU71Cx9wmv89jAdBE6Ri",
+    "bc1q7787j6msqczs58asdtetchl3zwe8ruj57p9r9y",
+    "bc1q0wlpxctzv0fm9qprrcplmn9t93hkr9ydupf8n0",
+    "bc1qcxse4z2rvltw3r764puq52vc9cgv5dv2nmruz8",
+    "1H8mGPcvv2Ess3jxCEsTd4B4gkYiia9Ubq",
+    "bc1q8888888p9ffr9dwjs9g35fv6hwfqahfl8nw7l6"
 ]);
 
 const MULTIDISPENSERS = new Set([
     "bc1qn9xq3txq3qcsfet5frvxvf8ch45dkw2fwmd76a",
-    "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc"
+    "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc",
+    "bc1q8888888p9ffr9dwjs9g35fv6hwfqahfl8nw7l6"
 ]);
 
 let allDispensers = [];
 let showVerifiedOnly = false;
 
-document.getElementById("loadBtn").onclick = loadDispensers;
 document.getElementById("verifiedFilterBtn").onclick = toggleVerifiedFilter;
+document.getElementById("themeToggleBtn").onclick = toggleTheme;
+
+function applyTheme(theme) {
+    document.body.classList.toggle("light", theme === "light");
+    localStorage.setItem("theme", theme);
+    document.getElementById("themeToggleBtn").textContent =
+        theme === "light" ? "Dark mode" : "Light mode";
+}
+
+function toggleTheme() {
+    const current = document.body.classList.contains("light") ? "light" : "dark";
+    applyTheme(current === "light" ? "dark" : "light");
+}
+
+applyTheme(localStorage.getItem("theme") || "dark");
+
+// Auto-load after 1 second
+setTimeout(loadDispensers, 1000);
 
 async function loadDispensers() {
-    const btn = document.getElementById("loadBtn");
-    btn.disabled = true;
-    document.getElementById("status").textContent =
-        " Loading open XCP dispensers...";
-
     const res = await fetch(
         `${CP_API}/assets/XCP/dispensers?status=0&asset=XCP&limit=15000`
     );
@@ -209,18 +232,14 @@ async function loadDispensers() {
         )
         .sort((a, b) => a.satoshirate - b.satoshirate);
 
-    updateLastUpdated();
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    document.getElementById("lastUpdated").textContent =
+        `Last updated: ${yyyy}-${mm}-${dd}`;
+
     renderTable();
-
-    btn.disabled = false;
-    document.getElementById("status").textContent = "";
-}
-
-function updateLastUpdated() {
-    const el = document.getElementById("lastUpdated");
-    el.textContent =
-        "Last updated: " +
-        new Date().toLocaleString();
 }
 
 function toggleVerifiedFilter() {
@@ -242,27 +261,27 @@ function renderTable() {
     allDispensers
         .filter(d => !showVerifiedOnly || VERIFIED_ADDRESSES.has(d.source))
         .forEach(d => {
-            totalGiveRemaining += d.give_remaining || 0;
+            const giveXCP = Math.floor(d.give_remaining / 1e8);
+            totalGiveRemaining += giveXCP;
 
-            const isVerified = VERIFIED_ADDRESSES.has(d.source);
-            const isMulti = MULTIDISPENSERS.has(d.source);
+            const shortAddr = d.source.length > 17
+                ? d.source.slice(0,9) + "..." + d.source.slice(-5)
+                : d.source;
 
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-<td class="addr">${d.source}</td>
+            rows.insertAdjacentHTML("beforeend", `
+<tr>
+<td class="addr">${shortAddr}</td>
 
-<td class="verified"
-    title="This is a Niftyboss1 verified dispenser">
-    ${isVerified ? "✔️" : ""}
+<td class="verified" title="This is a Niftyboss1 verified dispenser">
+    ${VERIFIED_ADDRESSES.has(d.source) ? "✔️" : ""}
 </td>
 
-<td class="multi"
-    title="This is a multidispenser (XCP, PEPECASH)">
-    ${isMulti ? "&#x1F381;" : ""}
+<td class="multi" title="This is a multidispenser (XCP, PEPECASH)">
+    ${MULTIDISPENSERS.has(d.source) ? "&#x1F381;" : ""}
 </td>
 
 <td class="numeric highlight">
-    ${(d.give_remaining / 1e8).toFixed(8)}
+    ${usNumber.format(giveXCP)}
 </td>
 
 <td class="numeric">
@@ -274,12 +293,12 @@ function renderTable() {
     |
     <a href="https://horizon.market/explorer/tx/${d.tx_hash}" target="_blank">Horizon</a>
 </td>
-            `;
-            rows.appendChild(tr);
+</tr>
+            `);
         });
 
     document.getElementById("totalGiveRemaining").textContent =
-        (totalGiveRemaining / 1e8).toFixed(8);
+        usNumber.format(totalGiveRemaining);
 }
 </script>
 
