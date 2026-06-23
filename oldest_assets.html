@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Counterparty Earliest Assets</title>
+
+<style>
+:root{
+    --bg:#0b0f14;
+    --panel:#111826;
+    --text:#e6edf3;
+    --muted:#9aa4b2;
+    --border:#1f2a37;
+    --accent:#3b82f6;
+}
+
+body{
+    margin:0;
+    padding:24px;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    background:var(--bg);
+    color:var(--text);
+}
+
+h2{
+    margin:0 0 12px 0;
+    font-size:18px;
+    font-weight:600;
+}
+
+.status{
+    margin:10px 0 16px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.table-wrap{
+    width:90%;
+    margin:0 auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+}
+
+thead th{
+    position:sticky;
+    top:0;
+    background:#0f172a;
+    cursor:pointer;
+    user-select:none;
+    font-size:13px;
+    padding:10px;
+    border-bottom:1px solid var(--border);
+}
+
+tbody td{
+    padding:8px 10px;
+    font-size:13px;
+    border-bottom:1px solid var(--border);
+}
+
+tbody tr:hover{
+    background:#0f172a;
+}
+
+a{
+    color:var(--accent);
+    text-decoration:none;
+}
+
+a:hover{
+    text-decoration:underline;
+}
+
+.rownum{
+    color:var(--muted);
+    width:40px;
+}
+
+.lightbulb{
+    margin-left:6px;
+    cursor:help;
+}
+</style>
+</head>
+
+<body>
+
+<h2>100 Earliest Counterparty Assets</h2>
+<div id="status" class="status">Loading…</div>
+
+<div class="table-wrap">
+<table id="tbl" style="display:none">
+<thead>
+<tr>
+    <th class="rownum">#</th>
+    <th data-key="asset">Asset</th>
+    <th data-key="block_index">Block</th>
+    <th data-key="tx_index">TX Index</th>
+    <th data-key="block_time">Creation Date</th>
+    <th data-key="issuer">Issuer</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+
+let data = [];
+let sortKey = "block_index";
+let sortDir = 1;
+
+function fmtDate(ts){
+    if (!ts) return "";
+    return new Date(ts * 1000)
+        .toISOString()
+        .replace("T"," ")
+        .slice(0,19);
+}
+
+function shortAddr(addr){
+    if (!addr) return "";
+    if (addr.length <= 12) return addr;
+    return addr.slice(0,6) + "..." + addr.slice(-4);
+}
+
+function getVal(r, key){
+    const v = r[key];
+    if (v == null) return 0;
+
+    if (key === "asset" || key === "issuer")
+        return String(v).toLowerCase();
+
+    return Number(v);
+}
+
+function assetLink(asset){
+    return `https://tokenscan.io/asset/${encodeURIComponent(asset)}`;
+}
+
+function txLink(txIndex){
+    return `https://tokenscan.io/tx/${txIndex}`;
+}
+
+function hasLightbulb(asset){
+    return asset === "TEST" || asset === "CAKE";
+}
+
+function render(){
+
+    const tbody = document.querySelector("tbody");
+    tbody.innerHTML = "";
+
+    data.forEach((r, i) => {
+
+        const tr = document.createElement("tr");
+
+        const assetHTML = r.asset
+            ? `<a href="${assetLink(r.asset)}" target="_blank">${r.asset}</a>`
+            : "";
+
+        const txHTML = r.tx_index != null
+            ? `<a href="${txLink(r.tx_index)}" target="_blank">${r.tx_index}</a>`
+            : "";
+
+        const bulbHTML = hasLightbulb(r.asset)
+            ? `<span class="lightbulb" title="This asset has currently active dispensers">\u{1F4A1}</span>`
+            : "";
+
+        tr.innerHTML = `
+            <td class="rownum">${i + 1}</td>
+            <td>${assetHTML}${bulbHTML}</td>
+            <td>${r.block_index}</td>
+            <td>${txHTML}</td>
+            <td>${fmtDate(r.block_time)}</td>
+            <td>${shortAddr(r.issuer)}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+function sortBy(key){
+
+    if (sortKey === key)
+        sortDir *= -1;
+    else {
+        sortKey = key;
+        sortDir = 1;
+    }
+
+    data.sort((a,b) => {
+
+        const va = getVal(a,key);
+        const vb = getVal(b,key);
+
+        if (va < vb) return -1 * sortDir;
+        if (va > vb) return  1 * sortDir;
+        return 0;
+    });
+
+    render();
+}
+
+async function load(){
+
+    const url =
+        "https://api.counterparty.io:4000/v2/issuances?limit=600&cursor=600&verbose=true";
+
+    const res = await fetch(url);
+    const json = await res.json();
+
+    const rows = json.result || [];
+
+    const best = new Map();
+
+    for (const r of rows) {
+
+        if (!r.asset) continue;
+
+        const prev = best.get(r.asset);
+
+        const isEarlier =
+            !prev ||
+            r.block_index < prev.block_index ||
+            (
+                r.block_index === prev.block_index &&
+                (r.tx_index || 0) < (prev.tx_index || 0)
+            );
+
+        if (isEarlier)
+            best.set(r.asset, r);
+    }
+
+    const all = Array.from(best.values());
+
+    all.sort((a,b) =>
+        a.block_index - b.block_index ||
+        (a.tx_index || 0) - (b.tx_index || 0)
+    );
+
+    data = all.slice(0,100);
+
+    render();
+
+    document.getElementById("status").innerText =
+        `Showing ${data.length} earliest assets`;
+
+    document.getElementById("tbl").style.display = "";
+
+    document.querySelectorAll("th[data-key]").forEach(th => {
+        th.addEventListener("click", () => sortBy(th.dataset.key));
+    });
+}
+
+load().catch(err => {
+    document.getElementById("status").innerText = err.message;
+});
+
+</script>
+
+</body>
+</html>
