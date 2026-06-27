@@ -118,10 +118,51 @@ a:hover {
     text-align: center;
     cursor: help;
 }
+
+/* Info Card Styling */
+.info-cards-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 10;
+}
+
+.info-card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    min-width: 240px;
+}
+
+.info-card h4 {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.info-card .price {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+}
 </style>
 </head>
 
 <body>
+
+<div class="info-cards-container">
+    <div class="info-card">
+        <h4>Current floor price for 1 XCP</h4>
+        <div id="floor-1" class="price">Loading...</div>
+    </div>
+</div>
 
 <h2>
 Dynamic list of open XCP dispensers, maintained by
@@ -131,7 +172,7 @@ Dynamic list of open XCP dispensers, maintained by
 <button id="verifiedFilterBtn" class="secondary">Show Verified Only</button>
 <button id="themeToggleBtn" class="secondary">Light mode</button>
 
-<div style="margin-top:16px; margin-bottom:6px; color:var(--muted); line-height:1.5;">
+<div style="margin-top:16px; margin-bottom:6px; color:var(--muted); line-height:1.5; padding-right: 280px;">
     <p>
         To buy XCP, trigger these dispensers using a Counterparty wallet.
         (see list at <a href="https://counterparty.io" target="_blank">counterparty.io</a>)
@@ -150,6 +191,7 @@ Dynamic list of open XCP dispensers, maintained by
     <th>Multidispenser</th>
     <th>Give Remaining (XCP)</th>
     <th>Satoshirate</th>
+    <th>~USD</th>
     <th>URLs</th>
 </tr>
 </thead>
@@ -163,6 +205,7 @@ Dynamic list of open XCP dispensers, maintained by
     <td></td>
     <td id="totalGiveRemaining" class="numeric">0</td>
     <td></td>
+    <td></td>
     <td id="lastUpdated" style="text-align:right; color:var(--muted); font-weight:500;">
         Last updated: —
     </td>
@@ -172,7 +215,9 @@ Dynamic list of open XCP dispensers, maintained by
 
 <script>
 const CP_API = "https://api.counterparty.io:4000/v2";
+const COINBASE_API = "https://api.coinbase.com/v2/prices/BTC-USD/spot";
 const usNumber = new Intl.NumberFormat("en-US");
+const usdFormat = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
 const VERIFIED_ADDRESSES = new Set([
     "bc1q2lucujpedcrjvzax4kgrpfhk92wqkhejr0g75k",
@@ -183,7 +228,7 @@ const VERIFIED_ADDRESSES = new Set([
     "1FDVTNiW4eWK5w7SDjsJVbRabjF3uDPJ6A",
     "19QWXpMXeLkoEKEJv2xo9rn8wkPCyxACSX",
     "14GJcX5x9GESu1scC5FvWTg6kz48AdR1ft",
-    "bc1q0vep4hc2ljnuvmtehqk0qk0qujrlxpdu5yrkvc",
+    "bc1qreefy33thdnsrjk4my23upe3qpsf2g6hfc44gk",
     "bc1qhw7atfkv9fuem3wywcys7et6gyj72jahwqqze7",
     "bc1quemkur7clx66eglf9weuzndc2fkldqejjva52g",
     "bc1qvf23agqtkurydglle47atlaxxmk465tkz63gnv",
@@ -204,6 +249,7 @@ const MULTIDISPENSERS = new Set([
 
 let allDispensers = [];
 let showVerifiedOnly = false;
+let btcUsdPrice = 0;
 
 document.getElementById("verifiedFilterBtn").onclick = toggleVerifiedFilter;
 document.getElementById("themeToggleBtn").onclick = toggleTheme;
@@ -223,7 +269,20 @@ function toggleTheme() {
 applyTheme(localStorage.getItem("theme") || "dark");
 
 // Auto-load after 1 second
-setTimeout(loadDispensers, 1000);
+setTimeout(loadData, 1000);
+
+async function loadData() {
+    try {
+        // Fetch BTC price first
+        const btcRes = await fetch(COINBASE_API);
+        const btcJson = await btcRes.json();
+        btcUsdPrice = parseFloat(btcJson.data.amount);
+    } catch (e) {
+        console.error("Failed to fetch BTC price from Coinbase", e);
+    }
+
+    await loadDispensers();
+}
 
 async function loadDispensers() {
     const res = await fetch(
@@ -246,6 +305,7 @@ async function loadDispensers() {
         `Last updated: ${yyyy}-${mm}-${dd}`;
 
     renderTable();
+    calculateCards();
 }
 
 function toggleVerifiedFilter() {
@@ -256,6 +316,21 @@ function toggleVerifiedFilter() {
         ? "Showing Verified Only"
         : "Show Verified Only";
     renderTable();
+    calculateCards();
+}
+
+function calculateCards() {
+    const filtered = allDispensers.filter(d => !showVerifiedOnly || VERIFIED_ADDRESSES.has(d.source));
+    
+    // 1 XCP Card calculation
+    const card1 = document.getElementById("floor-1");
+    if (filtered.length > 0) {
+        const lowestSats = filtered[0].satoshirate;
+        const lowestUsd = btcUsdPrice ? (lowestSats / 1e8) * btcUsdPrice : 0;
+        card1.innerHTML = `${usNumber.format(lowestSats)} sats <span style="font-size:14px; font-weight:normal; color:var(--muted);">(${usdFormat.format(lowestUsd)})</span>`;
+    } else {
+        card1.textContent = "—";
+    }
 }
 
 function renderTable() {
@@ -273,6 +348,10 @@ function renderTable() {
             const shortAddr = d.source.length > 17
                 ? d.source.slice(0,9) + "..." + d.source.slice(-5)
                 : d.source;
+
+            // Calculate row USD price
+            const usdPrice = btcUsdPrice ? (d.satoshirate / 1e8) * btcUsdPrice : 0;
+            const usdDisplay = btcUsdPrice ? usdFormat.format(usdPrice) : "—";
 
             rows.insertAdjacentHTML("beforeend", `
 <tr>
@@ -294,6 +373,10 @@ function renderTable() {
     ${usNumber.format(d.satoshirate)}
 </td>
 
+<td class="numeric" style="color: var(--muted);">
+    ${usdDisplay}
+</td>
+
 <td class="numeric">
     <a href="https://tokenscan.io/tx/${d.tx_hash}" target="_blank">TokenScan</a>
     |
@@ -311,6 +394,3 @@ function renderTable() {
 
 </body>
 </html>
-
-
-
