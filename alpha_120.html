@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Mini XCP Explorer</title>
+<title>RTXCP</title>
 
 <style>
 
@@ -72,6 +72,22 @@ header {
 
     color:var(--muted);
     font-size:13px;
+}
+
+
+.subtitle-link {
+
+    color:#4da8da;
+
+    text-decoration:none;
+
+}
+
+
+.subtitle-link:hover {
+
+    text-decoration:underline;
+
 }
 
 
@@ -233,7 +249,7 @@ table {
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) {
 
-    width:calc(6% + 20px);
+    width:calc(6%);
 
 }
 
@@ -267,6 +283,8 @@ table {
 
     width:10%;
 
+    min-width:124px;
+
 }
 
 
@@ -275,13 +293,17 @@ table {
 
     width:10%;
 
+    min-width:124px;
+
 }
 
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
 
-    width:calc(20% - 60px);
+    width:calc(20% - 80px);
+
+    max-width:12%;
 
 }
 
@@ -333,6 +355,35 @@ th {
     text-align:left;
 
     padding:12px;
+
+    position:relative;
+
+}
+
+
+.col-resize-handle {
+
+    position:absolute;
+
+    top:0;
+    right:-3px;
+    bottom:0;
+
+    width:6px;
+
+    cursor:col-resize;
+
+    z-index:5;
+
+    user-select:none;
+
+}
+
+
+.col-resize-handle:hover,
+.col-resize-handle.resizing {
+
+    background:rgba(128,128,128,.4);
 
 }
 
@@ -602,11 +653,11 @@ repeat(2,1fr);
 <div>
 
 <div class="logo">
-Mini XCP Explorer
+RTXCP
 </div>
 
 <div class="subtitle">
-This is a bare-bones, real-time Counterparty explorer that focuses on current activity. No images, optimized for performance! (ALPHA)
+This is a real-time, lightweight <a class="subtitle-link" href="https://www.counterparty.io/">Counterparty</a> explorer that focuses on current activity.<br>No media, optimized for performance and reliability. (BETA)
 </div>
 
 </div>
@@ -615,7 +666,7 @@ This is a bare-bones, real-time Counterparty explorer that focuses on current ac
 <div style="display:flex;gap:10px;">
 
 <button class="toggle" id="mute-toggle" onclick="toggleMute()">
-
+🔊
 </button>
 
 <button class="toggle" onclick="toggleTheme()">
@@ -637,15 +688,21 @@ This is a bare-bones, real-time Counterparty explorer that focuses on current ac
 
 
 <div class="card">
+<div class="card-title">Block Height</div>
+<div class="card-value" id="block-height-value">—</div>
+<div style="font-size:12px;color:var(--muted);margin-top:4px;" id="block-height-time"></div>
+</div>
+
+
+<div class="card">
 <div class="card-title">Total Tx</div>
 <div class="card-value" id="total-tx-value">—</div>
 </div>
 
 
 <div class="card">
-<div class="card-title">Block Height</div>
-<div class="card-value" id="block-height-value">—</div>
-<div style="font-size:12px;color:var(--muted);margin-top:4px;" id="block-height-time"></div>
+<div class="card-title">Total Tx (24h)</div>
+<div class="card-value" id="total-tx-24h-value">—</div>
 </div>
 
 
@@ -657,12 +714,6 @@ This is a bare-bones, real-time Counterparty explorer that focuses on current ac
 
 <div class="card">
 <div class="card-title">XCP Price</div>
-<div class="card-value">—</div>
-</div>
-
-
-<div class="card">
-<div class="card-title">24h Volume</div>
 <div class="card-value">—</div>
 </div>
 
@@ -698,15 +749,21 @@ Loading...
 
 <tr>
 
-<th>Block</th>
-<th>Time</th>
-<th>Type</th>
-<th>Source</th>
-<th>Asset1</th>
-<th>Asset2</th>
-<th>Details</th>
-<th>Status</th>
-<th>Fee</th>
+<th data-col="block">Block<span class="col-resize-handle"></span></th>
+<th data-col="time">Time<span class="col-resize-handle"></span></th>
+<th
+id="mempool-type-header"
+data-col="type"
+onclick="showTypeFilterMenu(event, 'mempool');"
+style="cursor:pointer;"
+title="Click to filter by type"
+>Type<span id="mempool-type-filter-label"></span><span class="col-resize-handle"></span></th>
+<th data-col="source">Source<span class="col-resize-handle"></span></th>
+<th data-col="asset1">Asset1<span class="col-resize-handle"></span></th>
+<th data-col="asset2">Asset2<span class="col-resize-handle"></span></th>
+<th data-col="details">Details<span class="col-resize-handle"></span></th>
+<th data-col="status">Status<span class="col-resize-handle"></span></th>
+<th data-col="fee">Fee<span class="col-resize-handle"></span></th>
 
 </tr>
 
@@ -739,7 +796,7 @@ Loading mempool...
 
 <div class="panel-header">
 
-Recent Confirmed Transactions
+Recent Confirmed Transactions<span id="tx-json-count"></span>
 
 </div>
 
@@ -755,20 +812,21 @@ Recent Confirmed Transactions
 
 <tr>
 
-<th>Block</th>
-<th>Time</th>
+<th data-col="block">Block<span class="col-resize-handle"></span></th>
+<th data-col="time">Time<span class="col-resize-handle"></span></th>
 <th
 id="type-header"
-oncontextmenu="showTypeFilterMenu(event);return false;"
-style="cursor:context-menu;"
-title="Right-click to filter by type"
->Type<span id="type-filter-label"></span></th>
-<th>Source</th>
-<th>Asset1</th>
-<th>Asset2</th>
-<th>Details</th>
-<th>Status</th>
-<th>Fee</th>
+data-col="type"
+onclick="showTypeFilterMenu(event, 'tx');"
+style="cursor:pointer;"
+title="Click to filter by type"
+>Type<span id="type-filter-label"></span><span class="col-resize-handle"></span></th>
+<th data-col="source">Source<span class="col-resize-handle"></span></th>
+<th data-col="asset1">Asset1<span class="col-resize-handle"></span></th>
+<th data-col="asset2">Asset2<span class="col-resize-handle"></span></th>
+<th data-col="details">Details<span class="col-resize-handle"></span></th>
+<th data-col="status">Status<span class="col-resize-handle"></span></th>
+<th data-col="fee">Fee<span class="col-resize-handle"></span></th>
 
 </tr>
 
@@ -900,7 +958,12 @@ let lastBlockHeight = null;
 
 let lastTransactions = [];
 
-let transactionTypeFilter = null;
+let transactionSelectedTypes = null;
+
+
+let lastMempoolRows = [];
+
+let mempoolSelectedTypes = null;
 
 
 let knownMempoolHashes = null;
@@ -908,6 +971,186 @@ let knownMempoolHashes = null;
 
 let muted =
 localStorage.getItem("muted") === "true";
+
+
+
+
+const COLUMN_KEYS =
+["block", "time", "type", "source", "asset1", "asset2", "details", "status", "fee"];
+
+
+function loadColumnWidths(){
+
+    try {
+
+        const raw =
+        localStorage.getItem("columnWidths");
+
+        return raw ? JSON.parse(raw) : {};
+
+    }
+
+    catch(e){
+
+        return {};
+
+    }
+
+}
+
+
+function saveColumnWidths(widths){
+
+    try {
+
+        localStorage.setItem(
+            "columnWidths",
+            JSON.stringify(widths)
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+let columnWidths =
+loadColumnWidths();
+
+
+function applyColumnWidths(){
+
+    COLUMN_KEYS.forEach(key=>{
+
+        const width =
+        columnWidths[key];
+
+        if(!width)
+            return;
+
+        document.querySelectorAll(
+            `th[data-col="${key}"]`
+        ).forEach(th=>{
+
+            th.style.width = width;
+
+        });
+
+    });
+
+}
+
+
+let resizeState = null;
+
+
+function startColumnResize(e){
+
+    e.preventDefault();
+
+
+    const handle =
+    e.target;
+
+    const th =
+    handle.closest("th");
+
+    const key =
+    th.dataset.col;
+
+    if(!key)
+        return;
+
+
+    resizeState = {
+
+        key: key,
+        startX: e.clientX,
+        startWidth: th.getBoundingClientRect().width
+
+    };
+
+
+    handle.classList.add("resizing");
+
+
+    document.addEventListener("mousemove", onColumnResizeMove);
+    document.addEventListener("mouseup", onColumnResizeEnd);
+
+}
+
+
+function onColumnResizeMove(e){
+
+    if(!resizeState)
+        return;
+
+
+    const delta =
+    e.clientX - resizeState.startX;
+
+    const newWidth =
+    Math.max(40, Math.round(resizeState.startWidth + delta));
+
+
+    columnWidths[resizeState.key] =
+    newWidth + "px";
+
+
+    document.querySelectorAll(
+        `th[data-col="${resizeState.key}"]`
+    ).forEach(th=>{
+
+        th.style.width = newWidth + "px";
+
+    });
+
+}
+
+
+function onColumnResizeEnd(){
+
+    if(!resizeState)
+        return;
+
+
+    document.removeEventListener("mousemove", onColumnResizeMove);
+    document.removeEventListener("mouseup", onColumnResizeEnd);
+
+
+    document.querySelectorAll(".col-resize-handle.resizing").forEach(h=>{
+
+        h.classList.remove("resizing");
+
+    });
+
+
+    saveColumnWidths(columnWidths);
+
+
+    resizeState = null;
+
+}
+
+
+function initColumnResize(){
+
+    document.querySelectorAll(".col-resize-handle").forEach(handle=>{
+
+        handle.addEventListener("mousedown", startColumnResize);
+
+        handle.addEventListener("click", e => e.stopPropagation());
+
+    });
+
+}
+
+
 
 
 
@@ -1115,9 +1358,7 @@ function formatTime(value){
 
 
     if(diffSec < 60)
-        return diffSec <= 1
-        ? "just now"
-        : diffSec + " seconds ago";
+        return "now";
 
 
     const diffMin =
@@ -1284,11 +1525,12 @@ function renderTransactionRows(){
 
 
     const filtered =
-    transactionTypeFilter
-    ? lastTransactions.filter(
-        tx => tx.transaction_type === transactionTypeFilter
-      )
-    : lastTransactions;
+    lastTransactions.filter(
+        tx => isTypeIncluded(
+            transactionSelectedTypes,
+            tx.transaction_type
+        )
+    );
 
 
 
@@ -1375,10 +1617,94 @@ function renderTransactionRows(){
     tbody.innerHTML=html;
 
 
-    document.getElementById("type-filter-label").innerText =
-    transactionTypeFilter
-    ? " (" + transactionTypeFilter + ")"
-    : "";
+    updateTypeFilterLabel("tx");
+
+}
+
+
+
+
+function isTypeIncluded(selected, type){
+
+    if(!type)
+        return true;
+
+    if(selected === null)
+        return true;
+
+    return selected.has(type);
+
+}
+
+
+
+
+function getTxTypes(){
+
+    return Array.from(
+        new Set(
+            lastTransactions
+            .map(tx => tx.transaction_type)
+            .filter(Boolean)
+        )
+    ).sort();
+
+}
+
+
+
+
+function getMempoolTypes(){
+
+    return getTxTypes();
+
+}
+
+
+
+
+function updateTypeFilterLabel(kind){
+
+    const label =
+    document.getElementById(
+        kind === "tx"
+        ? "type-filter-label"
+        : "mempool-type-filter-label"
+    );
+
+    if(!label)
+        return;
+
+
+    const selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
+
+    const types =
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
+
+
+    if(selected === null){
+
+        label.innerText = "";
+
+    }
+
+    else if(selected.size === 0){
+
+        label.innerText = " (none)";
+
+    }
+
+    else {
+
+        label.innerText =
+        " (" + selected.size + "/" + types.length + ")";
+
+    }
 
 }
 
@@ -1398,35 +1724,104 @@ function closeTypeFilterMenu(){
 
 
 
-function setTypeFilter(type){
+function toggleTypeFilter(kind, type, checked){
 
-    transactionTypeFilter = type;
+    const types =
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
 
-    closeTypeFilterMenu();
 
-    renderTransactionRows();
+    let selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
+
+
+    if(selected === null)
+        selected = new Set(types);
+
+
+    if(checked)
+        selected.add(type);
+    else
+        selected.delete(type);
+
+
+    if(kind === "tx"){
+
+        transactionSelectedTypes = selected;
+        renderTransactionRows();
+
+    }
+
+    else {
+
+        mempoolSelectedTypes = selected;
+        renderMempoolRows();
+
+    }
+
+
+    updateTypeFilterLabel(kind);
 
 }
 
 
 
 
-function showTypeFilterMenu(event){
+function setAllTypesSelected(kind, selectAll){
 
-    event.preventDefault();
+    if(kind === "tx"){
 
+        transactionSelectedTypes = selectAll ? null : new Set();
+        renderTransactionRows();
+
+    }
+
+    else {
+
+        mempoolSelectedTypes = selectAll ? null : new Set();
+        renderMempoolRows();
+
+    }
+
+
+    updateTypeFilterLabel(kind);
+
+
+    const menu =
+    document.getElementById("type-filter-menu");
+
+    if(menu){
+
+        menu.querySelectorAll("input[type=checkbox]").forEach(cb=>{
+
+            cb.checked = selectAll;
+
+        });
+
+    }
+
+}
+
+
+
+
+function showTypeFilterMenu(event, kind){
 
     closeTypeFilterMenu();
 
 
     const types =
-    Array.from(
-        new Set(
-            lastTransactions
-            .map(tx => tx.transaction_type)
-            .filter(Boolean)
-        )
-    ).sort();
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
+
+    const selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
 
 
     const menu =
@@ -1440,23 +1835,40 @@ function showTypeFilterMenu(event){
 
 
     let itemsHtml =
-    `<div class="context-menu-item" onclick="setTypeFilter(null)">
-    All types
-    </div>`;
+    `
+    <div class="context-menu-item" onclick="setAllTypesSelected('${kind}', true)">
+    Select all
+    </div>
+    <div class="context-menu-item" onclick="setAllTypesSelected('${kind}', false)">
+    Clear all
+    </div>
+    <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+    `;
 
 
     types.forEach(t=>{
 
+        const checked =
+        selected === null || selected.has(t);
+
         itemsHtml += `
-        <div class="context-menu-item" onclick="setTypeFilter('${t}')">
+        <label class="context-menu-item" style="display:flex;align-items:center;gap:8px;">
+        <input
+        type="checkbox"
+        ${checked ? "checked" : ""}
+        onchange="toggleTypeFilter('${kind}', '${t}', this.checked)"
+        >
         ${t}
-        </div>
+        </label>
         `;
 
     });
 
 
     menu.innerHTML = itemsHtml;
+
+
+    menu.addEventListener("click", e => e.stopPropagation());
 
 
     document.body.appendChild(menu);
@@ -1501,8 +1913,31 @@ async function loadTransactions(){
         renderTransactionRows();
 
 
+        document.getElementById("tx-json-count").innerText =
+        " (" + lastTransactions.length + ")";
+
+
         document.getElementById("total-tx-value").innerText =
         (json.result_count ?? "—");
+
+
+        const nowSeconds =
+        Date.now() / 1000;
+
+
+        const count24h =
+        lastTransactions.filter(tx=>{
+
+            if(!tx.block_time)
+                return false;
+
+            return (nowSeconds - tx.block_time) <= 86400;
+
+        }).length;
+
+
+        document.getElementById("total-tx-24h-value").innerText =
+        count24h;
 
 
 
@@ -1525,6 +1960,122 @@ async function loadTransactions(){
 
     }
 
+
+}
+
+
+
+
+function renderMempoolRows(){
+
+
+    const mempoolTbody =
+    document.getElementById("mempool-tbody");
+
+
+    const filtered =
+    lastMempoolRows.filter(
+        r => isTypeIncluded(
+            mempoolSelectedTypes,
+            r.detail.transactionType ?? r.detail.type
+        )
+    );
+
+
+
+    let html="";
+
+
+
+    filtered.forEach(r=>{
+
+
+        const hash =
+        r.hash;
+
+        const detail =
+        r.detail;
+
+
+        const displayType =
+        detail.transactionType ?? detail.type;
+
+        const displaySource =
+        (displayType === "dispense" && detail.newTransactionSource)
+        ? detail.newTransactionSource
+        : detail.source;
+
+
+        html += `
+
+        <tr>
+
+        <td>-1</td>
+
+        <td>${formatTime(r.timestamp)}</td>
+
+        <td>${(() => {
+
+        if(!displayType)
+            return "";
+
+        const color =
+        typeColor(displayType);
+
+        return `<span style="background:${color.bg};color:${color.text};padding:3px 10px;border-radius:12px;font-size:12px;white-space:nowrap;">${displayType}</span>`;
+
+        })()}</td>
+
+        <td>${displaySource
+        ? `<a href="#" onclick="showBalances('${displaySource}');return false;">${shortAddress(displaySource)}</a>`
+        : ""}</td>
+
+        <td>${assetLinkHtml(detail.asset1)}</td>
+
+        <td>${assetLinkHtml(detail.asset2)}</td>
+
+
+        <td>
+
+        <a target="_blank" href="https://mempool.space/tx/${hash}">L1</a>
+        &nbsp;
+        <a target="_blank" href="https://memepool.wtf/tx/${hash}">L2</a>
+
+        </td>
+
+        <td>${detail.dispenserStatus ?? detail.status ?? ""}</td>
+
+        <td>${formatFee(detail.fee)}</td>
+
+
+        </tr>
+
+        `;
+
+
+    });
+
+
+
+    if(!html){
+
+        html =
+        `
+        <tr>
+        <td colspan="9" class="loading">
+        No mempool transactions
+        </td>
+        </tr>
+        `;
+
+    }
+
+
+
+    mempoolTbody.innerHTML=html;
+
+
+    updateTypeFilterLabel("mempool");
 
 }
 
@@ -1595,8 +2146,21 @@ async function loadMempool(){
             if(!d.type)
                 d.type = e.event;
 
+            if(
+                d.transactionType == null
+                && e.params?.transaction_type != null
+            )
+                d.transactionType = e.params.transaction_type;
+
             if(!d.source && e.params?.source)
                 d.source = e.params.source;
+
+            if(
+                d.newTransactionSource == null
+                && e.event === "NEW_TRANSACTION"
+                && e.params?.source != null
+            )
+                d.newTransactionSource = e.params.source;
 
             if(!d.asset1 && (e.params?.asset || e.params?.get_asset))
                 d.asset1 = e.params.asset ?? e.params.get_asset;
@@ -1624,84 +2188,30 @@ async function loadMempool(){
 
 
 
-        let html="";
-
-
-
-        parsed.forEach(e=>{
-
+        lastMempoolRows =
+        parsed.map(e=>{
 
             const hash =
             e.tx_hash ?? e.params?.tx_hash;
 
-            const detail =
-            detailsByTx[hash] || {};
+            return {
 
+                hash: hash,
+                timestamp: e.timestamp,
+                detail: detailsByTx[hash] || {}
 
-            html += `
-
-            <tr>
-
-            <td>-1</td>
-
-            <td>${formatTime(e.timestamp)}</td>
-
-            <td>${detail.type ?? ""}</td>
-
-            <td>${detail.source
-            ? `<a href="#" onclick="showBalances('${detail.source}');return false;">${shortAddress(detail.source)}</a>`
-            : ""}</td>
-
-            <td>${assetLinkHtml(detail.asset1)}</td>
-
-            <td>${assetLinkHtml(detail.asset2)}</td>
-
-
-            <td>
-
-            <a target="_blank" href="https://mempool.space/tx/${hash}">L1</a>
-            &nbsp;
-            <a target="_blank" href="https://tokenscan.io/tx/${hash}">L2</a>
-
-            </td>
-
-            <td>${detail.dispenserStatus ?? detail.status ?? ""}</td>
-
-            <td>${formatFee(detail.fee)}</td>
-
-
-            </tr>
-
-            `;
-
+            };
 
         });
 
 
 
-        if(!html){
-
-            html =
-            `
-            <tr>
-            <td colspan="9" class="loading">
-            No mempool transactions
-            </td>
-            </tr>
-            `;
-
-        }
-
-
-
-        mempoolTbody.innerHTML=html;
+        renderMempoolRows();
 
 
         const currentHashes =
         new Set(
-            parsed.map(
-                e => e.tx_hash ?? e.params?.tx_hash
-            )
+            lastMempoolRows.map(r => r.hash)
         );
 
 
@@ -2238,7 +2748,7 @@ function toggleTheme(){
 function updateMuteIcon(){
 
     document.getElementById("mute-toggle").innerText =
-    muted ? "" : "";
+    muted ? "🔇" : "🔊";
 
 }
 
@@ -2352,6 +2862,12 @@ else if(initialRoute?.type === "asset"){
     showAssetInfo(initialRoute.value, false);
 
 }
+
+
+
+
+applyColumnWidths();
+initColumnResize();
 
 
 
