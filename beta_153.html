@@ -115,7 +115,7 @@ header {
     display:grid;
 
     grid-template-columns:
-    repeat(5,1fr);
+    repeat(4,1fr);
 
     gap:15px;
 
@@ -462,6 +462,58 @@ a:hover {
 
 }
 
+.modal-tabs {
+
+    display:flex;
+
+    gap:4px;
+
+    padding:10px 20px 0;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.modal-tab {
+
+    cursor:pointer;
+
+    border:none;
+
+    background:none;
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    padding:8px 14px;
+
+    border-bottom:2px solid transparent;
+
+    font-family:inherit;
+
+}
+
+.modal-tab.active {
+
+    color:var(--text);
+
+    border-bottom:2px solid #4da8da;
+
+    font-weight:600;
+
+}
+
+.modal-tab-count {
+
+    color:var(--muted);
+
+    font-weight:normal;
+
+    margin-left:4px;
+
+}
+
 .modal-close {
 
     cursor:pointer;
@@ -688,11 +740,6 @@ This is a real-time, lightweight <a class="subtitle-link" href="https://www.coun
 <div class="card-value" id="version-value">—</div>
 </div>
 
-<div class="card" style="display:none;">
-<div class="card-title">XCP Price</div>
-<div class="card-value">—</div>
-</div>
-
 </div>
 
 <div class="panel" style="margin-bottom:25px;">
@@ -836,20 +883,22 @@ Loading transactions...
 
 <div class="modal-header">
 
-<span>
-
 <span id="balance-modal-address"></span>
-<span id="balance-modal-count" style="color:var(--muted);font-weight:normal;"></span>
-
-</span>
 
 <button class="modal-close" onclick="closeBalanceModal()">✕</button>
 
 </div>
 
+<div class="modal-tabs">
+
+<button class="modal-tab active" id="balances-tab-btn" onclick="switchAddressTab('balances')">Asset Balances<span id="balance-modal-count" class="modal-tab-count"></span></button>
+<button class="modal-tab" id="ownerships-tab-btn" onclick="switchAddressTab('ownerships')">Asset Ownerships<span id="ownership-modal-count" class="modal-tab-count"></span></button>
+
+</div>
+
 <div class="modal-body">
 
-<table>
+<table id="balances-tab-content">
 
 <thead>
 <tr>
@@ -866,7 +915,24 @@ Loading transactions...
 
 </table>
 
+<table id="ownerships-tab-content" style="display:none;">
+
+<thead>
+<tr>
+<th>Asset</th>
+</tr>
+</thead>
+
+<tbody id="ownership-modal-tbody">
+<tr>
+<td colspan="1" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
 </div>
+
 
 </div>
 
@@ -937,14 +1003,13 @@ Loading transactions...
 
 function apiCallsAllowed(){
 
-    return location.href.includes("/Users/")
-    || location.href.includes("boss1.");
+    return location.href.includes("/Users/") || location.href.includes("oss1.");  // beta locations
 
 }
 
 
 const API =
-"https://api.counterparty.io:4000/v2/transactions?limit=500&verbose=true";
+"https://api.counterparty.io:4000/v2/transactions?limit=200&verbose=true";
 
 const MEMPOOL_API =
 "https://api.counterparty.io:4000/v2/mempool/events?limit=800";
@@ -1128,41 +1193,18 @@ function initColumnResize(){
 
 function adjustPanelWidths(){
 
+    const cards =
+    document.querySelector(".cards");
+
+    if(!cards)
+        return;
+
+    const width =
+    cards.getBoundingClientRect().width;
+
     document.querySelectorAll(".panel").forEach(panel=>{
 
-        const wrap =
-        panel.querySelector(".table-wrap");
-
-        const table =
-        wrap ? wrap.querySelector(".data-table") : null;
-
-        if(!table){
-
-            panel.style.width = "";
-            return;
-
-        }
-
-        if(document.body.classList.contains("hide-status-fee")){
-
-            const scrollbarWidth =
-            wrap.offsetWidth - wrap.clientWidth;
-
-            const borderWidth =
-            panel.offsetWidth - panel.clientWidth;
-
-            const neededWidth =
-            table.scrollWidth + scrollbarWidth + borderWidth;
-
-            panel.style.width = neededWidth + "px";
-
-        }
-
-        else {
-
-            panel.style.width = "";
-
-        }
+        panel.style.width = width + "px";
 
     });
 
@@ -2138,6 +2180,137 @@ console.error(e);
 
 }
 
+let currentBalanceAddress = null;
+
+let ownershipsLoadedFor = null;
+
+
+function switchAddressTab(tab){
+
+    const balancesBtn =
+    document.getElementById("balances-tab-btn");
+
+    const ownershipsBtn =
+    document.getElementById("ownerships-tab-btn");
+
+    const balancesContent =
+    document.getElementById("balances-tab-content");
+
+    const ownershipsContent =
+    document.getElementById("ownerships-tab-content");
+
+
+    if(tab === "ownerships"){
+
+        balancesBtn.classList.remove("active");
+        ownershipsBtn.classList.add("active");
+
+        balancesContent.style.display = "none";
+        ownershipsContent.style.display = "";
+
+        if(ownershipsLoadedFor !== currentBalanceAddress)
+            loadAssetOwnerships(currentBalanceAddress);
+
+    }
+
+    else {
+
+        ownershipsBtn.classList.remove("active");
+        balancesBtn.classList.add("active");
+
+        ownershipsContent.style.display = "none";
+        balancesContent.style.display = "";
+
+    }
+
+}
+
+
+async function loadAssetOwnerships(address){
+
+    if(!apiCallsAllowed())
+        return;
+
+    document.getElementById("ownership-modal-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="1" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    document.getElementById("ownership-modal-count").innerText =
+    "";
+
+    try {
+
+        const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/addresses/${address}/assets?verbose=true`
+        );
+
+        const json =
+        await response.json();
+
+        const assets =
+        json.result || [];
+
+        const resultCount =
+        json.result_count ?? assets.length;
+
+        assets.sort(
+            (a,b) =>
+            (a.asset ?? "").localeCompare(b.asset ?? "")
+        );
+
+        let html="";
+
+        assets.forEach(a=>{
+
+            html += `
+            <tr>
+            <td>${assetLinkHtml(a.asset)}</td>
+            </tr>
+            `;
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="1" class="loading">No assets</td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("ownership-modal-tbody").innerHTML =
+        html;
+
+        document.getElementById("ownership-modal-count").innerText =
+        " (" + resultCount + ")";
+
+        ownershipsLoadedFor = address;
+
+    }
+
+    catch(e){
+
+        document.getElementById("ownership-modal-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="1" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
 async function showBalances(address, updateHash=true){
 
 if(!apiCallsAllowed())
@@ -2152,6 +2325,11 @@ if(updateHash){
         );
 
     }
+
+currentBalanceAddress = address;
+    ownershipsLoadedFor = null;
+
+    switchAddressTab("balances");
 
 document.getElementById("balance-modal-address").innerText =
     address;
@@ -3085,6 +3263,8 @@ document.addEventListener("keydown", (e)=>{
 applyColumnWidths();
 initColumnResize();
 adjustPanelWidths();
+
+window.addEventListener("resize", adjustPanelWidths);
 
 loadTransactions();
 loadMempool();
