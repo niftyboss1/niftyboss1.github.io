@@ -1,0 +1,5547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RTXCP</title>
+
+<style>
+
+:root {
+    --bg: #121212;
+    --card: #1b1b1b;
+    --header: #222;
+    --border: #333;
+    --text: #e5e5e5;
+    --muted: #999;
+    --hover: #242424;
+}
+
+.light {
+    --bg: #f5f5f5;
+    --card: #ffffff;
+    --header: #fafafa;
+    --border: #d8d8d8;
+    --text: #222;
+    --muted: #666;
+    --hover: #eeeeee;
+}
+
+* {
+    box-sizing:border-box;
+}
+
+body {
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:
+        Inter,
+        Segoe UI,
+        Arial,
+        sans-serif;
+    transition:background .25s,color .25s;
+}
+
+header {
+
+    min-height:70px;
+    padding:18px 35px;
+
+    background:var(--card);
+    border-bottom:1px solid var(--border);
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+}
+
+.logo {
+
+    font-size:24px;
+    font-weight:700;
+}
+
+.subtitle {
+
+    color:var(--muted);
+    font-size:13px;
+    padding-bottom:14px;
+}
+
+.subtitle-link {
+
+    color:#4da8da;
+
+    text-decoration:none;
+
+}
+
+.subtitle-link:hover {
+
+    text-decoration:underline;
+
+}
+
+.toggle {
+
+    cursor:pointer;
+
+    border:1px solid var(--border);
+    background:var(--header);
+
+    color:var(--text);
+
+    padding:8px 15px;
+
+    border-radius:20px;
+
+    font-size:14px;
+}
+
+.container {
+
+    width:95%;
+    max-width:1500px;
+
+    margin:25px auto;
+}
+
+/* summary cards */
+
+.cards {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(4,1fr);
+
+    gap:15px;
+
+    margin-bottom:25px;
+}
+
+.card {
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:18px;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,.15);
+
+}
+
+.card-title {
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    margin-bottom:12px;
+}
+
+.card-value {
+
+    font-size:22px;
+
+    font-weight:600;
+}
+
+/* transactions */
+
+.panel {
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    width:100%;
+
+    transition:width .15s;
+
+}
+
+.panel-header {
+
+    background:var(--header);
+
+    padding:16px 20px;
+
+    font-size:18px;
+
+    font-weight:600;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.status {
+
+    float:right;
+
+    font-size:12px;
+
+    color:var(--muted);
+
+    font-weight:normal;
+}
+
+.table-wrap {
+
+    overflow-x:auto;
+
+    overflow-y:auto;
+
+    scrollbar-gutter:stable;
+
+}
+
+#tx-table-wrap {
+
+    max-height:1720px;
+
+}
+
+#dispensers-table-wrap {
+
+    max-height:1720px;
+
+}
+
+#orders-table-wrap {
+
+    max-height:1720px;
+
+}
+
+#mempool-table-wrap {
+
+    max-height:300px;
+
+}
+
+table {
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+.data-table {
+
+    table-layout:fixed;
+
+    width:100%;
+
+    min-width:760px;
+
+}
+
+.data-table th,
+.data-table td {
+
+    min-width:0;
+
+}
+
+.main-data-table th:nth-child(1),
+.main-data-table td:nth-child(1) {
+
+    width:6%;
+
+}
+
+.main-data-table th:nth-child(2),
+.main-data-table td:nth-child(2) {
+
+    width:calc(6%);
+
+}
+
+.main-data-table th:nth-child(3),
+.main-data-table td:nth-child(3) {
+
+    width:12%;
+
+}
+
+.main-data-table th:nth-child(4),
+.main-data-table td:nth-child(4) {
+
+    width:10%;
+
+}
+
+.main-data-table th:nth-child(5),
+.main-data-table td:nth-child(5) {
+
+    width:18%;
+
+}
+
+.main-data-table th:nth-child(6),
+.main-data-table td:nth-child(6) {
+
+    width:8%;
+
+}
+
+.main-data-table th:nth-child(7),
+.main-data-table td:nth-child(7) {
+
+    width:10%;
+
+    min-width:124px;
+
+}
+
+.main-data-table th:nth-child(8),
+.main-data-table td:nth-child(8) {
+
+    width:8%;
+
+}
+
+.main-data-table th:nth-child(9),
+.main-data-table td:nth-child(9) {
+
+    width:10%;
+
+    min-width:124px;
+
+}
+
+.main-data-table th:nth-child(10),
+.main-data-table td:nth-child(10) {
+
+    width:calc(20% - 80px);
+
+    max-width:12%;
+
+    min-width:60px;
+
+}
+
+.main-data-table th:nth-child(11),
+.main-data-table td:nth-child(11) {
+
+    width:8%;
+
+}
+
+.main-data-table th:nth-child(12),
+.main-data-table td:nth-child(12) {
+
+    width:6%;
+
+}
+
+.main-data-table th:nth-child(13),
+.main-data-table td:nth-child(13) {
+
+    width:8%;
+
+}
+
+.data-table td {
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
+
+}
+
+thead {
+
+    position:sticky;
+
+    top:0;
+
+}
+
+th {
+
+    background:var(--header);
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    text-align:left;
+
+    padding:12px;
+
+    position:relative;
+
+}
+
+.col-resize-handle {
+
+    position:absolute;
+
+    top:0;
+    right:-3px;
+    bottom:0;
+
+    width:6px;
+
+    cursor:col-resize;
+
+    z-index:5;
+
+    user-select:none;
+
+}
+
+.col-resize-handle:hover,
+.col-resize-handle.resizing {
+
+    background:rgba(128,128,128,.4);
+
+}
+
+td {
+
+    padding:12px;
+
+    border-top:1px solid var(--border);
+
+    font-size:14px;
+
+}
+
+tr:hover {
+
+    background:var(--hover);
+
+}
+
+a {
+
+    color:inherit;
+
+    text-decoration:none;
+
+    font-family:inherit;
+
+}
+
+a:hover {
+
+    text-decoration:underline;
+
+}
+
+.loading {
+
+    text-align:center;
+
+    padding:40px;
+
+    color:var(--muted);
+
+}
+
+.modal-overlay {
+
+    display:none;
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.6);
+
+    align-items:center;
+
+    justify-content:center;
+
+    z-index:1000;
+
+}
+
+.modal-overlay.open {
+
+    display:flex;
+
+}
+
+.modal-card {
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    width:90%;
+
+    max-width:480px;
+
+    max-height:80vh;
+
+    display:flex;
+
+    flex-direction:column;
+
+    box-shadow:0 8px 30px rgba(0,0,0,.3);
+
+}
+
+.modal-header {
+
+    padding:16px 20px;
+
+    border-bottom:1px solid var(--border);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    font-family:inherit;
+
+    font-size:13px;
+
+}
+
+.modal-tabs {
+
+    display:flex;
+
+    gap:4px;
+
+    padding:10px 20px 0;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.modal-tab {
+
+    cursor:pointer;
+
+    border:none;
+
+    background:none;
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    padding:8px 14px;
+
+    border-bottom:2px solid transparent;
+
+    font-family:inherit;
+
+}
+
+.modal-tab.active {
+
+    color:var(--text);
+
+    border-bottom:2px solid #4da8da;
+
+    font-weight:600;
+
+}
+
+.modal-tab-count {
+
+    color:var(--muted);
+
+    font-weight:normal;
+
+    margin-left:4px;
+
+}
+
+.pagination-controls {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:14px 20px;
+
+    font-size:13px;
+
+    color:var(--muted);
+
+}
+
+.pagination-controls button {
+
+    cursor:pointer;
+
+    border:1px solid var(--border);
+
+    background:var(--header);
+
+    color:var(--text);
+
+    padding:6px 12px;
+
+    border-radius:6px;
+
+    font-size:13px;
+
+    font-family:inherit;
+
+}
+
+.pagination-controls button:disabled {
+
+    cursor:default;
+
+    opacity:0.4;
+
+}
+
+.modal-close {
+
+    cursor:pointer;
+
+    border:none;
+
+    background:none;
+
+    color:var(--text);
+
+    font-size:16px;
+
+    padding:0 4px;
+
+}
+
+.modal-body {
+
+    overflow-y:auto;
+
+    padding:10px 20px 20px;
+
+}
+
+.modal-body table {
+
+    width:100%;
+
+}
+
+.modal-body th {
+
+    text-align:left;
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    padding:8px;
+
+}
+
+.modal-body td {
+
+    padding:8px;
+
+    border-top:1px solid var(--border);
+
+    font-size:14px;
+
+}
+
+.asset-info-label {
+
+    color:var(--muted);
+
+    width:140px;
+
+    white-space:nowrap;
+
+    vertical-align:top;
+
+}
+
+.tx-field-label {
+
+    background:hsl(210, 75%, 88%);
+
+    color:hsl(210, 55%, 30%);
+
+    width:180px;
+
+    white-space:nowrap;
+
+    vertical-align:top;
+
+    font-weight:600;
+
+}
+
+.asset-info-value {
+
+    word-break:break-word;
+
+}
+
+.context-menu {
+
+    position:absolute;
+
+    background:var(--card);
+
+    border:1px solid var(--border);
+
+    border-radius:8px;
+
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+
+    padding:6px;
+
+    z-index:2000;
+
+    min-width:160px;
+
+    max-height:300px;
+
+    overflow-y:auto;
+
+    font-size:14px;
+
+}
+
+.context-menu-item {
+
+    padding:8px 12px;
+
+    border-radius:6px;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+}
+
+.context-menu-item:hover {
+
+    background:var(--hover);
+
+}
+
+@media(max-width:900px){
+
+.cards {
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+}
+
+@media(max-width:600px){
+
+header {
+
+padding:14px 18px;
+
+}
+
+.logo {
+
+font-size:20px;
+
+}
+
+.subtitle {
+
+font-size:12px;
+
+}
+
+}
+
+@media(max-width:799px){
+
+.asset-info-label,
+.tx-field-label {
+
+max-width:130px;
+
+}
+
+.data-table th,
+.data-table td {
+
+min-width:100px;
+
+}
+
+.main-data-table th,
+.main-data-table td {
+
+min-width:120px !important;
+
+}
+
+.data-table col {
+
+width:120px !important;
+
+}
+
+.col-txindex,
+.col-block,
+.col-status,
+.col-fee,
+.col-satoshirate {
+
+visibility:collapse;
+
+}
+
+}
+
+
+body.hide-status-fee .col-status,
+body.hide-status-fee .col-fee,
+body.hide-status-fee .col-satoshirate {
+
+visibility:collapse;
+
+}
+
+</style>
+
+</head>
+
+<body class="hide-status-fee">
+
+<header>
+
+<div>
+
+<div class="logo">
+RTXCP
+</div>
+
+<div class="subtitle">
+Real-time <a class="subtitle-link" href="https://www.counterparty.io/">Counterparty</a> activity (BETA), by @niftyboss1
+</div>
+
+</div>
+
+<div style="display:flex;gap:10px;">
+
+<button class="toggle" onclick="openSearchModal()" title="Search">
+🔍
+</button>
+
+<button class="toggle" id="mute-toggle" onclick="toggleMute()">
+🔊
+</button>
+
+<button class="toggle" onclick="toggleTheme()">
+☾ / ☀
+</button>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<div class="cards">
+
+<div class="card">
+<div class="card-title">Block Height</div>
+<div class="card-value" id="block-height-value">—</div>
+<div style="font-size:12px;color:var(--muted);margin-top:4px;" id="block-height-time"></div>
+</div>
+
+<div class="card">
+<div class="card-title">Total Tx</div>
+<div class="card-value" id="total-tx-value">—</div>
+</div>
+
+<div class="card">
+<div class="card-title">Total Tx (24h)</div>
+<div class="card-value" id="total-tx-24h-value">—</div>
+</div>
+
+<div class="card">
+<div class="card-title">Node Version</div>
+<div class="card-value" id="version-value">—</div>
+</div>
+
+</div>
+
+<div class="panel" style="margin-bottom:25px;">
+
+<div class="panel-header">
+
+Mempool
+<span id="mempool-count"></span>
+
+<span class="status" id="mempool-status">
+Loading...
+</span>
+
+</div>
+
+<div class="table-wrap" id="mempool-table-wrap">
+
+<table class="data-table main-data-table">
+
+<colgroup>
+<col class="col-txindex">
+<col class="col-block">
+<col>
+<col>
+<col>
+<col class="col-qty1">
+<col>
+<col class="col-qty2">
+<col>
+<col>
+<col class="col-status">
+<col class="col-fee">
+<col class="col-satoshirate">
+</colgroup>
+
+<thead>
+
+<tr>
+
+<th data-col="txindex">Tx Index<span class="col-resize-handle"></span></th>
+<th data-col="block">Block<span class="col-resize-handle"></span></th>
+<th data-col="time">Time<span class="col-resize-handle"></span></th>
+<th
+id="mempool-type-header"
+data-col="type"
+onclick="showTypeFilterMenu(event, 'mempool');"
+style="cursor:pointer;"
+title="Click to filter by type"
+>Type<span id="mempool-type-filter-label"></span><span class="col-resize-handle"></span></th>
+<th data-col="source">Source<span class="col-resize-handle"></span></th>
+<th data-col="qty1">Qty1<span class="col-resize-handle"></span></th>
+<th data-col="asset1">Asset1<span class="col-resize-handle"></span></th>
+<th data-col="qty2">Qty2<span class="col-resize-handle"></span></th>
+<th data-col="asset2">Asset2 (give)<span class="col-resize-handle"></span></th>
+<th data-col="details">Details<span class="col-resize-handle"></span></th>
+<th data-col="status">Status<span class="col-resize-handle"></span></th>
+<th data-col="fee">Fee<span class="col-resize-handle"></span></th>
+<th data-col="satoshirate">Satoshirate<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="mempool-tbody">
+
+<tr>
+<td colspan="13" class="loading">
+Loading mempool...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<div class="modal-tabs" style="padding:16px 20px 0;">
+
+<button class="modal-tab active" id="tx-panel-tab-btn" onclick="switchPanelTab('transactions')">Confirmed Transactions</button>
+<button class="modal-tab" id="dispensers-panel-tab-btn" onclick="switchPanelTab('dispensers')">Open Dispensers</button>
+<button class="modal-tab" id="orders-panel-tab-btn" onclick="switchPanelTab('orders')">Open Orders</button>
+
+</div>
+
+<div id="tx-panel-tab-content">
+
+<div class="table-wrap" id="tx-table-wrap">
+
+<table class="data-table main-data-table">
+
+<colgroup>
+<col class="col-txindex">
+<col class="col-block">
+<col>
+<col>
+<col>
+<col class="col-qty1">
+<col>
+<col class="col-qty2">
+<col>
+<col>
+<col class="col-status">
+<col class="col-fee">
+<col class="col-satoshirate">
+</colgroup>
+
+<thead>
+
+<tr>
+
+<th data-col="txindex">Tx Index<span class="col-resize-handle"></span></th>
+<th data-col="block">Block<span class="col-resize-handle"></span></th>
+<th data-col="time">Time<span class="col-resize-handle"></span></th>
+<th
+id="type-header"
+data-col="type"
+onclick="showTypeFilterMenu(event, 'tx');"
+style="cursor:pointer;"
+title="Click to filter by type"
+>Type<span id="type-filter-label"></span><span class="col-resize-handle"></span></th>
+<th data-col="source">Source<span class="col-resize-handle"></span></th>
+<th data-col="qty1">Qty1<span class="col-resize-handle"></span></th>
+<th data-col="asset1">Asset1<span class="col-resize-handle"></span></th>
+<th data-col="qty2">Qty2<span class="col-resize-handle"></span></th>
+<th data-col="asset2">Asset2 (give)<span class="col-resize-handle"></span></th>
+<th data-col="details">Details<span class="col-resize-handle"></span></th>
+<th data-col="status">Status<span class="col-resize-handle"></span></th>
+<th data-col="fee">Fee<span class="col-resize-handle"></span></th>
+<th data-col="satoshirate">Satoshirate<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="tbody">
+
+<tr>
+<td colspan="13" class="loading">
+Loading transactions...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div id="tx-pagination" class="pagination-controls"></div>
+
+</div>
+
+<div id="dispensers-panel-tab-content" style="display:none;">
+
+<div class="table-wrap" id="dispensers-table-wrap">
+
+<table class="data-table">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+
+
+<thead>
+
+<tr>
+
+<th data-col="disp-txindex">Tx Index<span class="col-resize-handle"></span></th>
+<th data-col="disp-time">Time<span class="col-resize-handle"></span></th>
+<th data-col="disp-source">Source<span class="col-resize-handle"></span></th>
+<th data-col="disp-asset">Asset<span class="col-resize-handle"></span></th>
+<th data-col="disp-givequantity">Give Qty<span class="col-resize-handle"></span></th>
+<th data-col="disp-giveremaining">Give Remaining<span class="col-resize-handle"></span></th>
+<th data-col="disp-escrowqty">Escrow Qty<span class="col-resize-handle"></span></th>
+<th data-col="disp-satoshirate">Satoshirate<span class="col-resize-handle"></span></th>
+<th data-col="disp-status">Status<span class="col-resize-handle"></span></th>
+<th data-col="disp-details">Details<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="dispensers-tbody">
+
+<tr>
+<td colspan="10" class="loading">
+Loading dispensers...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div id="dispensers-pagination" class="pagination-controls"></div>
+
+</div>
+
+<div id="orders-panel-tab-content" style="display:none;">
+
+<div class="table-wrap" id="orders-table-wrap">
+
+<table class="data-table">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+
+
+<thead>
+
+<tr>
+
+<th data-col="ord-txindex">Tx Index<span class="col-resize-handle"></span></th>
+<th data-col="ord-time">Time<span class="col-resize-handle"></span></th>
+<th data-col="ord-source">Source<span class="col-resize-handle"></span></th>
+<th data-col="ord-getquantity">Get Qty<span class="col-resize-handle"></span></th>
+<th data-col="ord-getasset">Get Asset<span class="col-resize-handle"></span></th>
+<th data-col="ord-givequantity">Give Qty<span class="col-resize-handle"></span></th>
+<th data-col="ord-giveasset">Give Asset<span class="col-resize-handle"></span></th>
+<th data-col="ord-status">Status<span class="col-resize-handle"></span></th>
+<th data-col="ord-details">Details<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="orders-tbody">
+
+<tr>
+<td colspan="9" class="loading">
+Loading orders...
+</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div id="orders-pagination" class="pagination-controls"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="modal-overlay" id="balance-modal" onclick="if(event.target===this) closeBalanceModal();">
+
+<div class="modal-card">
+
+<div class="modal-header">
+
+<span id="balance-modal-address"></span>
+
+<button class="modal-close" onclick="closeBalanceModal()">✕</button>
+
+</div>
+
+<div class="modal-tabs">
+
+<button class="modal-tab active" id="balances-tab-btn" onclick="switchAddressTab('balances')">Asset Balances<span id="balance-modal-count" class="modal-tab-count"></span></button>
+<button class="modal-tab" id="ownerships-tab-btn" onclick="switchAddressTab('ownerships')">Asset Ownerships<span id="ownership-modal-count" class="modal-tab-count"></span></button>
+
+</div>
+
+<div class="modal-body">
+
+<div id="btc-balance-display" style="margin-bottom:4px;font-size:13px;color:var(--muted);"></div>
+
+<div id="btc-tx-count-display" style="margin-bottom:12px;font-size:13px;color:var(--muted);"></div>
+
+<table id="balances-tab-content">
+
+<thead>
+<tr>
+<th>Asset</th>
+<th>Quantity</th>
+</tr>
+</thead>
+
+<tbody id="balance-modal-tbody">
+<tr>
+<td colspan="2" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+<table id="ownerships-tab-content" style="display:none;">
+
+<thead>
+<tr>
+<th>Asset</th>
+</tr>
+</thead>
+
+<tbody id="ownership-modal-tbody">
+<tr>
+<td colspan="1" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+
+</div>
+
+</div>
+
+<div class="modal-overlay" id="asset-modal" onclick="if(event.target===this) closeAssetModal();">
+
+<div class="modal-card" style="max-width:900px;">
+
+<div class="modal-header">
+
+<span id="asset-modal-name"></span>
+
+<button class="modal-close" onclick="closeAssetModal()">✕</button>
+
+</div>
+
+<div class="modal-tabs">
+
+<button class="modal-tab active" id="asset-info-tab-btn" onclick="switchAssetModalTab('info')">Asset Info</button>
+<button class="modal-tab" id="asset-holders-tab-btn" onclick="switchAssetModalTab('holders')">Top Holders</button>
+<button class="modal-tab" id="asset-orders-tab-btn" onclick="switchAssetModalTab('orders')">Open Orders</button>
+<button class="modal-tab" id="asset-dispensers-tab-btn" onclick="switchAssetModalTab('dispensers')">Open Dispensers</button>
+
+</div>
+
+<div class="modal-body">
+
+<div id="asset-info-tab-content">
+
+<table>
+
+<tbody id="asset-modal-tbody">
+<tr>
+<td colspan="2" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+<div id="asset-holders-tab-content" style="display:none;">
+
+<div class="table-wrap">
+
+<table class="data-table">
+
+<thead>
+
+<tr>
+
+<th data-col="assetholders-rank">Rank<span class="col-resize-handle"></span></th>
+<th data-col="assetholders-address">Address<span class="col-resize-handle"></span></th>
+<th data-col="assetholders-quantity">Quantity<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="asset-holders-tbody">
+<tr>
+<td colspan="3" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div id="asset-orders-tab-content" style="display:none;">
+
+<div class="table-wrap">
+
+<table class="data-table">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+
+
+<thead>
+
+<tr>
+
+<th data-col="assetord-txindex" onclick="sortAssetOrdersBy('tx_index')" style="cursor:pointer;">Tx Index<span id="assetord-sort-tx_index"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-time" onclick="sortAssetOrdersBy('block_time')" style="cursor:pointer;">Time<span id="assetord-sort-block_time"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-source" onclick="sortAssetOrdersBy('source')" style="cursor:pointer;">Source<span id="assetord-sort-source"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-getquantity" onclick="sortAssetOrdersBy('get_quantity')" style="cursor:pointer;">Get Qty<span id="assetord-sort-get_quantity"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-getasset" onclick="sortAssetOrdersBy('get_asset')" style="cursor:pointer;">Get Asset<span id="assetord-sort-get_asset"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-givequantity" onclick="sortAssetOrdersBy('give_quantity')" style="cursor:pointer;">Give Qty<span id="assetord-sort-give_quantity"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-giveasset" onclick="sortAssetOrdersBy('give_asset')" style="cursor:pointer;">Give Asset<span id="assetord-sort-give_asset"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-status" onclick="sortAssetOrdersBy('status')" style="cursor:pointer;">Status<span id="assetord-sort-status"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetord-details">Details<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="asset-orders-tbody">
+<tr>
+<td colspan="9" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<div id="asset-dispensers-tab-content" style="display:none;">
+
+<div class="table-wrap">
+
+<table class="data-table">
+<colgroup>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+<col>
+</colgroup>
+
+
+<thead>
+
+<tr>
+
+<th data-col="assetdisp-txindex" onclick="sortAssetDispensersBy('tx_index')" style="cursor:pointer;">Tx Index<span id="assetdisp-sort-tx_index"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-time" onclick="sortAssetDispensersBy('block_time')" style="cursor:pointer;">Time<span id="assetdisp-sort-block_time"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-source" onclick="sortAssetDispensersBy('source')" style="cursor:pointer;">Source<span id="assetdisp-sort-source"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-asset" onclick="sortAssetDispensersBy('asset')" style="cursor:pointer;">Asset<span id="assetdisp-sort-asset"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-givequantity" onclick="sortAssetDispensersBy('give_quantity')" style="cursor:pointer;">Give Qty<span id="assetdisp-sort-give_quantity"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-giveremaining" onclick="sortAssetDispensersBy('give_remaining')" style="cursor:pointer;">Give Remaining<span id="assetdisp-sort-give_remaining"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-escrowqty" onclick="sortAssetDispensersBy('escrow_quantity')" style="cursor:pointer;">Escrow Qty<span id="assetdisp-sort-escrow_quantity"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-satoshirate" onclick="sortAssetDispensersBy('satoshirate')" style="cursor:pointer;">Satoshirate<span id="assetdisp-sort-satoshirate"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-status" onclick="sortAssetDispensersBy('status')" style="cursor:pointer;">Status<span id="assetdisp-sort-status"></span><span class="col-resize-handle"></span></th>
+<th data-col="assetdisp-details">Details<span class="col-resize-handle"></span></th>
+
+</tr>
+
+</thead>
+
+<tbody id="asset-dispensers-tbody">
+<tr>
+<td colspan="10" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="modal-overlay" id="tx-detail-modal" onclick="if(event.target===this) closeTxDetailModal();">
+
+<div class="modal-card" style="max-width:700px;">
+
+<div class="modal-header">
+
+<span id="tx-detail-modal-title" style="font-size:12px;"></span>
+
+<button class="modal-close" onclick="closeTxDetailModal()">✕</button>
+
+</div>
+
+<div class="modal-body">
+
+<div id="tx-detail-modal-type" style="font-weight:600;font-size:14px;margin-bottom:12px;color:var(--text);"></div>
+
+<table>
+
+<tbody id="tx-detail-modal-tbody">
+<tr>
+<td colspan="2" class="loading">Loading...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="modal-overlay" id="search-modal" onclick="if(event.target===this) closeSearchModal();">
+
+<div class="modal-card" style="max-width:420px;">
+
+<div class="modal-header">
+
+<span>Search</span>
+
+<button class="modal-close" onclick="closeSearchModal()">✕</button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+type="text"
+id="search-input"
+placeholder="Search by address, asset name, tx index or tx hash"
+style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;box-sizing:border-box;"
+onkeydown="if(event.key==='Enter') performSearch();"
+>
+
+<div id="search-modal-message" style="margin-top:10px;color:var(--muted);font-size:13px;"></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<div class="modal-overlay" id="preferences-modal" onclick="if(event.target===this) closePreferencesModal();">
+
+<div class="modal-card" style="max-width:480px;">
+
+<div class="modal-header">
+
+<span>Preferences</span>
+
+<button class="modal-close" onclick="closePreferencesModal()">✕</button>
+
+</div>
+
+<div class="modal-body">
+
+<label style="display:block;font-size:13px;color:var(--muted);margin-bottom:6px;">Highlighted assets (comma-separated, red)</label>
+
+<textarea
+id="preferences-flagged-assets"
+rows="3"
+style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;"
+></textarea>
+
+<label style="display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;">Preferred addresses (comma-separated, green)</label>
+
+<textarea
+id="preferences-addresses"
+rows="3"
+style="width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;box-sizing:border-box;font-family:inherit;resize:vertical;"
+></textarea>
+
+<div style="display:flex;gap:10px;margin-top:16px;">
+
+<button class="toggle" onclick="savePreferences()">Save</button>
+
+<button class="toggle" onclick="resetPreferencesToDefault()">Reset to default</button>
+
+</div>
+
+<div id="preferences-modal-message" style="margin-top:10px;color:var(--muted);font-size:13px;"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let topModalZIndex = 1000;
+
+
+function bringModalToFront(modalId){
+
+    topModalZIndex++;
+
+    const modal =
+    document.getElementById(modalId);
+
+    if(modal)
+        modal.style.zIndex = topModalZIndex;
+
+}
+
+
+function apiCallsAllowed(){
+
+    return location.href.includes("/Users/")
+    || location.href.includes("boss1.")
+    || location.href.includes("p.netlify.a");
+
+}
+
+
+const MEMPOOL_API =
+"https://api.counterparty.io:4000/v2/mempool/events?limit=800&verbose=true";
+
+const NODE_API =
+"https://api.counterparty.io:4000/v2/";
+
+const BLOCKS_API =
+"https://api.counterparty.io:4000/v2/blocks?limit=1";
+
+let lastBlockHeight = null;
+
+let lastTransactions = [];
+
+function loadTypeFilterState(){
+
+    try {
+
+        const raw =
+        localStorage.getItem("typeFilters");
+
+        if(!raw)
+            return { tx: null, mempool: null };
+
+        const parsed =
+        JSON.parse(raw);
+
+        return {
+
+            tx: Array.isArray(parsed.tx) ? new Set(parsed.tx) : null,
+            mempool: Array.isArray(parsed.mempool) ? new Set(parsed.mempool) : null
+
+        };
+
+    }
+
+    catch(e){
+
+        return { tx: null, mempool: null };
+
+    }
+
+}
+
+
+function saveTypeFilterState(){
+
+    try {
+
+        localStorage.setItem(
+            "typeFilters",
+            JSON.stringify({
+
+                tx: transactionSelectedTypes
+                ? Array.from(transactionSelectedTypes)
+                : null,
+
+                mempool: mempoolSelectedTypes
+                ? Array.from(mempoolSelectedTypes)
+                : null
+
+            })
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+const initialTypeFilterState =
+loadTypeFilterState();
+
+let transactionSelectedTypes =
+initialTypeFilterState.tx;
+
+let lastMempoolRows = [];
+
+let mempoolSelectedTypes =
+initialTypeFilterState.mempool;
+
+let knownMempoolHashes = null;
+
+let lastMempoolItemCount = null;
+
+let muted =
+localStorage.getItem("muted") === "true";
+
+const COLUMN_KEYS =
+[
+    "txindex", "block", "time", "type", "source", "qty1", "asset1", "qty2", "asset2", "details", "status", "fee", "satoshirate",
+    "disp-txindex", "disp-time", "disp-source", "disp-asset", "disp-givequantity", "disp-giveremaining", "disp-escrowqty", "disp-satoshirate", "disp-status", "disp-details",
+    "ord-txindex", "ord-time", "ord-source", "ord-giveasset", "ord-givequantity", "ord-getasset", "ord-getquantity", "ord-status", "ord-details",
+    "assetord-txindex", "assetord-time", "assetord-source", "assetord-getquantity", "assetord-getasset", "assetord-givequantity", "assetord-giveasset", "assetord-status", "assetord-details",
+    "assetdisp-txindex", "assetdisp-time", "assetdisp-source", "assetdisp-asset", "assetdisp-givequantity", "assetdisp-giveremaining", "assetdisp-escrowqty", "assetdisp-satoshirate", "assetdisp-status", "assetdisp-details",
+    "assetholders-rank", "assetholders-address", "assetholders-quantity"
+];
+
+function loadColumnWidths(){
+
+    try {
+
+        const raw =
+        localStorage.getItem("columnWidths");
+
+        return raw ? JSON.parse(raw) : {};
+
+    }
+
+    catch(e){
+
+        return {};
+
+    }
+
+}
+
+function saveColumnWidths(widths){
+
+    try {
+
+        localStorage.setItem(
+            "columnWidths",
+            JSON.stringify(widths)
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+let columnWidths =
+loadColumnWidths();
+
+function applyColumnWidths(){
+
+    const skipDefaultMinWidth =
+    new Set(["asset1", "asset2"]);
+
+    COLUMN_KEYS.forEach(key=>{
+
+        const width =
+        columnWidths[key];
+
+        document.querySelectorAll(
+            `th[data-col="${key}"]`
+        ).forEach(th=>{
+
+            if(width){
+
+                th.style.width = width;
+
+            }
+
+            else if(!skipDefaultMinWidth.has(key)){
+
+                th.style.minWidth = "110px";
+
+            }
+
+        });
+
+    });
+
+}
+
+let resizeState = null;
+
+function startColumnResize(e){
+
+    e.preventDefault();
+
+const handle =
+    e.target;
+
+    const th =
+    handle.closest("th");
+
+    const key =
+    th.dataset.col;
+
+    if(!key)
+        return;
+
+resizeState = {
+
+        key: key,
+        startX: e.clientX,
+        startWidth: th.getBoundingClientRect().width
+
+    };
+
+handle.classList.add("resizing");
+
+document.addEventListener("mousemove", onColumnResizeMove);
+    document.addEventListener("mouseup", onColumnResizeEnd);
+
+}
+
+function onColumnResizeMove(e){
+
+    if(!resizeState)
+        return;
+
+const delta =
+    e.clientX - resizeState.startX;
+
+    const newWidth =
+    Math.max(5, Math.round(resizeState.startWidth + delta));
+
+columnWidths[resizeState.key] =
+    newWidth + "px";
+
+document.querySelectorAll(
+        `th[data-col="${resizeState.key}"]`
+    ).forEach(th=>{
+
+        th.style.width = newWidth + "px";
+
+    });
+
+}
+
+function onColumnResizeEnd(){
+
+    if(!resizeState)
+        return;
+
+document.removeEventListener("mousemove", onColumnResizeMove);
+    document.removeEventListener("mouseup", onColumnResizeEnd);
+
+document.querySelectorAll(".col-resize-handle.resizing").forEach(h=>{
+
+        h.classList.remove("resizing");
+
+    });
+
+saveColumnWidths(columnWidths);
+
+resizeState = null;
+
+}
+
+function initColumnResize(){
+
+    document.querySelectorAll(".col-resize-handle").forEach(handle=>{
+
+        handle.addEventListener("mousedown", startColumnResize);
+
+        handle.addEventListener("click", e => e.stopPropagation());
+
+    });
+
+}
+
+
+function adjustPanelWidths(){
+
+    const cards =
+    document.querySelector(".cards");
+
+    if(!cards)
+        return;
+
+    const width =
+    cards.getBoundingClientRect().width;
+
+    document.querySelectorAll(".panel").forEach(panel=>{
+
+        panel.style.width = width + "px";
+
+    });
+
+}
+
+const DEFAULT_FLAGGED_ASSETS =
+["PRINCESSPEPE", "FDCARD", "RAREPEPE", "SATOSHICARD", "FAKEASF"];
+
+
+function loadFlaggedAssets(){
+
+    try {
+
+        const raw =
+        localStorage.getItem("flaggedAssets");
+
+        if(raw === null)
+            return [...DEFAULT_FLAGGED_ASSETS];
+
+        const parsed =
+        JSON.parse(raw);
+
+        return Array.isArray(parsed) ? parsed : [...DEFAULT_FLAGGED_ASSETS];
+
+    }
+
+    catch(e){
+
+        return [...DEFAULT_FLAGGED_ASSETS];
+
+    }
+
+}
+
+
+function loadPreferredAddresses(){
+
+    try {
+
+        const raw =
+        localStorage.getItem("preferredAddresses");
+
+        if(raw === null)
+            return [];
+
+        const parsed =
+        JSON.parse(raw);
+
+        return Array.isArray(parsed) ? parsed : [];
+
+    }
+
+    catch(e){
+
+        return [];
+
+    }
+
+}
+
+
+let FLAGGED_ASSETS =
+loadFlaggedAssets();
+
+
+let PREFERRED_ADDRESSES =
+loadPreferredAddresses();
+
+
+function saveFlaggedAssets(list){
+
+    try {
+
+        localStorage.setItem(
+            "flaggedAssets",
+            JSON.stringify(list)
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+function savePreferredAddresses(list){
+
+    try {
+
+        localStorage.setItem(
+            "preferredAddresses",
+            JSON.stringify(list)
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+function parseCommaList(value){
+
+    return value
+
+        .split(",")
+
+        .map(v => v.trim())
+
+        .filter(v => v.length > 0);
+
+}
+
+
+function refreshAllHighlighting(){
+
+    renderTransactionRows();
+    renderMempoolRows();
+    loadDispensers();
+    loadOrders();
+
+}
+
+
+function openPreferencesModal(){
+
+    document.getElementById("preferences-flagged-assets").value =
+    FLAGGED_ASSETS.join(", ");
+
+    document.getElementById("preferences-addresses").value =
+    PREFERRED_ADDRESSES.join(", ");
+
+    document.getElementById("preferences-modal-message").innerText =
+    "";
+
+    document.getElementById("preferences-modal").classList.add("open");
+
+    bringModalToFront("preferences-modal");
+
+}
+
+
+function closePreferencesModal(){
+
+    document.getElementById("preferences-modal").classList.remove("open");
+
+}
+
+
+function savePreferences(){
+
+    const assets =
+    parseCommaList(
+        document.getElementById("preferences-flagged-assets").value
+    ).map(a => a.toUpperCase());
+
+    const addresses =
+    parseCommaList(
+        document.getElementById("preferences-addresses").value
+    );
+
+    FLAGGED_ASSETS = assets;
+    PREFERRED_ADDRESSES = addresses;
+
+    saveFlaggedAssets(assets);
+    savePreferredAddresses(addresses);
+
+    document.getElementById("preferences-modal-message").innerText =
+    "Saved.";
+
+    refreshAllHighlighting();
+
+}
+
+
+function resetPreferencesToDefault(){
+
+    FLAGGED_ASSETS = [...DEFAULT_FLAGGED_ASSETS];
+    PREFERRED_ADDRESSES = [];
+
+    saveFlaggedAssets(FLAGGED_ASSETS);
+    savePreferredAddresses(PREFERRED_ADDRESSES);
+
+    document.getElementById("preferences-flagged-assets").value =
+    FLAGGED_ASSETS.join(", ");
+
+    document.getElementById("preferences-addresses").value =
+    "";
+
+    document.getElementById("preferences-modal-message").innerText =
+    "Reset to default.";
+
+    refreshAllHighlighting();
+
+}
+
+function isNotUnitQuantity(value){
+
+    if(value === null || value === undefined || value === "")
+        return false;
+
+    const num =
+    parseFloat(value);
+
+    return !isNaN(num) && num !== 1;
+
+}
+
+
+function formatNumber(value){
+
+    if(value === null || value === undefined || value === "")
+        return value;
+
+    let num;
+    let decimals = 0;
+
+    if(typeof value === "number"){
+
+        if(!isFinite(value))
+            return value;
+
+        num = value;
+
+        if(!Number.isInteger(value))
+            decimals = (value.toString().split(".")[1] || "").length;
+
+    }
+
+    else if(typeof value === "string"){
+
+        const trimmed =
+        value.trim();
+
+        if(!/^-?\d+(\.\d+)?$/.test(trimmed))
+            return value;
+
+        num = parseFloat(trimmed);
+
+        if(trimmed.includes("."))
+            decimals = trimmed.split(".")[1].length;
+
+    }
+
+    else {
+
+        return value;
+
+    }
+
+    return num.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+
+}
+
+function formatFee(fee){
+
+    return fee
+    ? formatNumber(fee)
+    : "n/a";
+
+}
+
+function assetLinkHtml(asset, longname){
+
+    if(!asset)
+        return "";
+
+const flagged =
+    FLAGGED_ASSETS.includes(asset);
+
+const style =
+    flagged
+    ? "color:#e53935;font-weight:700;"
+    : "";
+
+const displayText =
+    (longname && String(longname).trim() !== "")
+    ? longname
+    : asset;
+
+return `<a href="#" onclick="showAssetInfo('${asset}');return false;" style="${style}">${displayText}</a>`;
+
+}
+
+function sourceLinkHtml(address){
+
+    if(!address)
+        return "";
+
+    const preferred =
+    PREFERRED_ADDRESSES.includes(address);
+
+    const style =
+    preferred
+    ? "color:#43a047;font-weight:700;"
+    : "";
+
+    return `<a href="#" onclick="showBalances('${address}');return false;" style="${style}">${address}</a>`;
+
+}
+
+function typeColor(type){
+
+    if(!type)
+        return null;
+
+if(type === "dispense"){
+
+        return {
+
+            bg: "hsl(210, 75%, 88%)",
+            text: "hsl(210, 55%, 30%)"
+
+        };
+
+    }
+
+if(type === "dispenser"){
+
+        return {
+
+            bg: "hsl(140, 60%, 85%)",
+            text: "hsl(140, 55%, 25%)"
+
+        };
+
+    }
+
+let hash = 0;
+
+for(let i=0; i<type.length; i++){
+
+        hash =
+        type.charCodeAt(i)
+        + ((hash << 5) - hash);
+
+    }
+
+const hue =
+    Math.abs(hash) % 360;
+
+return {
+
+        bg: `hsl(${hue}, 70%, 88%)`,
+        text: `hsl(${hue}, 45%, 30%)`
+
+    };
+
+}
+
+function shortTx(a){
+
+    if(!a)
+        return "";
+
+    return a.substring(0,12)
+        +"...";
+}
+
+function formatDate(value){
+
+    if(!value)
+        return "";
+
+let date;
+
+if(typeof value === "number") {
+
+        date =
+        new Date(value*1000);
+
+    }
+
+    else if(/^\d+$/.test(value)) {
+
+        date =
+        new Date(Number(value)*1000);
+
+    }
+
+    else {
+
+        date =
+        new Date(value);
+
+    }
+
+if(isNaN(date))
+        return value;
+
+return date.getUTCFullYear()
+    + "-"
+    + String(date.getUTCMonth()+1).padStart(2,"0")
+    + "-"
+    + String(date.getUTCDate()).padStart(2,"0");
+
+}
+
+function formatTime(value){
+
+    if(!value)
+        return "";
+
+let date;
+
+if(typeof value === "number") {
+
+        date =
+        new Date(value*1000);
+
+    }
+
+    else if(/^\d+$/.test(value)) {
+
+        date =
+        new Date(Number(value)*1000);
+
+    }
+
+    else {
+
+        date =
+        new Date(value);
+
+    }
+
+if(isNaN(date))
+        return value;
+
+const diffMs =
+    Date.now() - date.getTime();
+
+    const diffSec =
+    Math.floor(diffMs/1000);
+
+if(diffSec < 60)
+        return "Just now";
+
+const diffMin =
+    Math.floor(diffSec/60);
+
+if(diffMin < 60)
+        return diffMin
+        + (diffMin === 1 ? " minute ago" : " minutes ago");
+
+const diffHour =
+    Math.floor(diffMin/60);
+
+if(diffHour < 24)
+        return diffHour
+        + (diffHour === 1 ? " hour ago" : " hours ago");
+
+const diffDay =
+    Math.floor(diffHour/24);
+
+return diffDay
+    + (diffDay === 1 ? " day ago" : " days ago");
+
+}
+
+function getAssetPair(tx){
+
+const md =
+    tx.unpacked_data?.message_data || {};
+
+let asset1 =
+    md.asset ?? md.get_asset;
+
+    let asset2 =
+    md.give_asset;
+
+let qty1 =
+    md.get_quantity_normalized;
+
+    let qty2 =
+    md.give_quantity_normalized;
+
+let longname1 =
+    md.asset_info?.asset_longname ?? md.get_asset_info?.asset_longname;
+
+    let longname2 =
+    md.give_asset_info?.asset_longname;
+
+let dispenseQty1 =
+    md.dispense_quantity_normalized;
+
+let sendQty1 =
+    md.quantity_normalized;
+
+if(asset1 == null || asset2 == null || qty1 == null || qty2 == null || longname1 == null || longname2 == null || dispenseQty1 == null || sendQty1 == null){
+
+const events =
+        tx.events || [];
+
+for(const e of events){
+
+            const p =
+            e.params || {};
+
+            if(asset1 == null && (p.asset || p.get_asset))
+                asset1 = p.asset ?? p.get_asset;
+
+            if(asset2 == null && p.give_asset)
+                asset2 = p.give_asset;
+
+            if(qty1 == null && p.get_quantity_normalized != null)
+                qty1 = p.get_quantity_normalized;
+
+            if(qty2 == null && p.give_quantity_normalized != null)
+                qty2 = p.give_quantity_normalized;
+
+            if(longname1 == null && (p.asset_info?.asset_longname || p.get_asset_info?.asset_longname))
+                longname1 = p.asset_info?.asset_longname ?? p.get_asset_info?.asset_longname;
+
+            if(longname2 == null && p.give_asset_info?.asset_longname)
+                longname2 = p.give_asset_info.asset_longname;
+
+            if(dispenseQty1 == null && p.dispense_quantity_normalized != null)
+                dispenseQty1 = p.dispense_quantity_normalized;
+
+            if(sendQty1 == null && p.quantity_normalized != null)
+                sendQty1 = p.quantity_normalized;
+
+        }
+
+    }
+
+return {
+
+        asset1: asset1 ?? "",
+        asset2: asset2 ?? "",
+        qty1: qty1 ?? "",
+        qty2: qty2 ?? "",
+        longname1: longname1 ?? "",
+        longname2: longname2 ?? "",
+        dispenseQty1: dispenseQty1 ?? "",
+        sendQty1: sendQty1 ?? ""
+
+    };
+
+}
+
+function getTxSource(tx){
+
+if(tx.transaction_type === "utxomove"){
+
+        if(tx.source_address != null)
+            return tx.source_address;
+
+if(tx.unpacked_data?.source_address != null)
+            return tx.unpacked_data.source_address;
+
+if(tx.unpacked_data?.message_data?.source_address != null)
+            return tx.unpacked_data.message_data.source_address;
+
+const utxomoveEvents =
+        tx.events || [];
+
+        for(const e of utxomoveEvents){
+
+            if(e.params?.source_address != null){
+
+                return e.params.source_address;
+
+            }
+
+        }
+
+    }
+
+return tx.source;
+
+}
+
+function getDispenserSatoshirate(tx){
+
+    if(tx.transaction_type !== "dispenser")
+        return "";
+
+    const md =
+    tx.unpacked_data?.message_data || {};
+
+    if(md.satoshirate_normalized != null)
+        return md.satoshirate_normalized;
+
+    const events =
+    tx.events || [];
+
+    for(const e of events){
+
+        if(e.params?.satoshirate_normalized != null)
+            return e.params.satoshirate_normalized;
+
+    }
+
+    return "";
+
+}
+
+
+function getTxStatus(tx){
+
+if(tx.transaction_type === "order"){
+
+        const orderEvents =
+        tx.events || [];
+
+        for(const e of orderEvents){
+
+            if(
+                e.event === "ORDER_UPDATE"
+                && e.params?.status != null
+            ){
+
+                return e.params.status;
+
+            }
+
+        }
+
+    }
+
+if(tx.transaction_type === "dispenser"){
+
+        if(tx.unpacked_data?.dispenser_status != null)
+            return tx.unpacked_data.dispenser_status;
+
+if(tx.dispenser_status != null)
+            return tx.dispenser_status;
+
+const dispenserEvents =
+        tx.events || [];
+
+        for(const e of dispenserEvents){
+
+            if(e.params?.dispenser_status != null){
+
+                return e.params.dispenser_status;
+
+            }
+
+        }
+
+    }
+
+if(tx.status != null)
+        return tx.status;
+
+const events =
+    tx.events || [];
+
+for(const e of events){
+
+        const p =
+        e.params || {};
+
+        if(p.status != null)
+            return p.status;
+
+    }
+
+return "";
+
+}
+
+function renderTransactionRows(){
+
+const filtered =
+    lastTransactions.filter(
+        tx => isTypeIncluded(
+            transactionSelectedTypes,
+            tx.transaction_type
+        )
+    );
+
+let html="";
+
+filtered.forEach(tx=>{
+
+const assets =
+        getAssetPair(tx);
+
+const status =
+        getTxStatus(tx);
+
+const source =
+        getTxSource(tx);
+
+const satoshirate =
+        getDispenserSatoshirate(tx);
+
+const showQty =
+        tx.transaction_type === "order";
+
+const qty1Display =
+        tx.transaction_type === "order"
+        ? assets.qty1
+        : (tx.transaction_type === "dispense" ? assets.dispenseQty1
+        : ((tx.transaction_type === "enhanced_send" || tx.transaction_type === "destroy") ? assets.sendQty1 : ""));
+
+html += `
+
+        <tr>
+
+        <td>${formatNumber(tx.tx_index ?? "")}</td>
+
+        <td>${formatNumber(tx.block_index ?? "")}</td>
+
+        <td>${formatTime(tx.block_time)}</td>
+
+        <td>${(() => {
+
+        const color =
+        typeColor(tx.transaction_type);
+
+        return tx.transaction_type
+        ? `<span style="background:${color.bg};color:${color.text};padding:3px 10px;border-radius:12px;font-size:12px;white-space:nowrap;">${tx.transaction_type}</span>`
+        : "";
+
+        })()}</td>
+
+        <td>${sourceLinkHtml(source)}</td>
+
+        <td>${formatNumber(qty1Display)}</td>
+
+        <td>${assetLinkHtml(assets.asset1, assets.longname1)}</td>
+
+        <td>${showQty ? formatNumber(assets.qty2) : ""}</td>
+
+        <td>${assetLinkHtml(assets.asset2, assets.longname2)}</td>
+
+<td>
+
+        <a target="_blank" href="https://mempool.space/tx/${tx.tx_hash}">L1</a>
+        &nbsp;
+        <a href="#" onclick="showTransactionDetail('${tx.tx_hash}', '${tx.transaction_type ?? ""}');return false;">L2</a>
+
+        </td>
+
+        <td>${status}</td>
+
+        <td>${formatFee(tx.fee)}</td>
+
+        <td>${formatNumber(satoshirate)}</td>
+
+</tr>
+
+        `;
+
+});
+
+if(!html){
+
+        const filterActive =
+        transactionSelectedTypes !== null && transactionSelectedTypes.size === 0;
+
+        html =
+        `
+        <tr>
+        <td colspan="13" class="loading">
+        ${filterActive
+        ? 'No transactions match the current type filter. <a href="#" onclick="setAllTypesSelected(&apos;tx&apos;, true);return false;">Clear filter</a>'
+        : 'No transactions'}
+        </td>
+        </tr>
+        `;
+
+    }
+
+tbody.innerHTML=html;
+
+updateTypeFilterLabel("tx");
+
+adjustPanelWidths();
+
+}
+
+function isTypeIncluded(selected, type){
+
+    if(!type)
+        return true;
+
+    if(selected === null)
+        return true;
+
+    return selected.has(type);
+
+}
+
+const ALWAYS_SHOWN_TYPES =
+["attach", "detach", "enhanced_send", "issuance", "sweep", "dispense", "dispenser", "order", "utxomove", "broadcast"];
+
+
+function getTxTypes(){
+
+    return Array.from(
+        new Set([
+            ...ALWAYS_SHOWN_TYPES,
+            ...lastTransactions
+                .map(tx => tx.transaction_type)
+                .filter(Boolean)
+        ])
+    ).sort();
+
+}
+
+function getMempoolTypes(){
+
+    return getTxTypes();
+
+}
+
+function updateTypeFilterLabel(kind){
+
+    const label =
+    document.getElementById(
+        kind === "tx"
+        ? "type-filter-label"
+        : "mempool-type-filter-label"
+    );
+
+    if(!label)
+        return;
+
+const selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
+
+    const types =
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
+
+if(selected === null){
+
+        label.innerText = "";
+
+    }
+
+    else if(selected.size === 0){
+
+        label.innerText = " (none)";
+
+    }
+
+    else {
+
+        label.innerText =
+        " (" + selected.size + "/" + types.length + ")";
+
+    }
+
+}
+
+function closeTypeFilterMenu(){
+
+    const menu =
+    document.getElementById("type-filter-menu");
+
+    if(menu)
+        menu.remove();
+
+}
+
+function toggleTypeFilter(kind, type, checked){
+
+    const types =
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
+
+let selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
+
+if(selected === null)
+        selected = new Set(types);
+
+if(checked)
+        selected.add(type);
+    else
+        selected.delete(type);
+
+if(kind === "tx"){
+
+        transactionSelectedTypes = selected;
+        renderTransactionRows();
+
+    }
+
+    else {
+
+        mempoolSelectedTypes = selected;
+        renderMempoolRows();
+
+    }
+
+updateTypeFilterLabel(kind);
+
+    saveTypeFilterState();
+
+}
+
+function setAllTypesSelected(kind, selectAll){
+
+    if(kind === "tx"){
+
+        transactionSelectedTypes = selectAll ? null : new Set();
+        renderTransactionRows();
+
+    }
+
+    else {
+
+        mempoolSelectedTypes = selectAll ? null : new Set();
+        renderMempoolRows();
+
+    }
+
+updateTypeFilterLabel(kind);
+
+const menu =
+    document.getElementById("type-filter-menu");
+
+    if(menu){
+
+        menu.querySelectorAll("input[type=checkbox]").forEach(cb=>{
+
+            cb.checked = selectAll;
+
+        });
+
+    }
+
+saveTypeFilterState();
+
+}
+
+function showTypeFilterMenu(event, kind){
+
+    closeTypeFilterMenu();
+
+const types =
+    kind === "tx"
+    ? getTxTypes()
+    : getMempoolTypes();
+
+    const selected =
+    kind === "tx"
+    ? transactionSelectedTypes
+    : mempoolSelectedTypes;
+
+const menu =
+    document.createElement("div");
+
+    menu.id = "type-filter-menu";
+    menu.className = "context-menu";
+
+    menu.style.left = event.pageX + "px";
+    menu.style.top = event.pageY + "px";
+
+let itemsHtml =
+    `
+    <div class="context-menu-item" onclick="setAllTypesSelected('${kind}', true)">
+    Select all
+    </div>
+    <div class="context-menu-item" onclick="setAllTypesSelected('${kind}', false)">
+    Clear all
+    </div>
+    <div style="border-top:1px solid var(--border);margin:6px 0;"></div>
+    `;
+
+types.forEach(t=>{
+
+        const checked =
+        selected === null || selected.has(t);
+
+        itemsHtml += `
+        <label class="context-menu-item" style="display:flex;align-items:center;gap:8px;">
+        <input
+        type="checkbox"
+        ${checked ? "checked" : ""}
+        onchange="toggleTypeFilter('${kind}', '${t}', this.checked)"
+        >
+        ${t}
+        </label>
+        `;
+
+    });
+
+menu.innerHTML = itemsHtml;
+
+menu.addEventListener("click", e => e.stopPropagation());
+
+document.body.appendChild(menu);
+
+setTimeout(()=>{
+
+        document.addEventListener(
+            "click",
+            closeTypeFilterMenu,
+            { once:true }
+        );
+
+    }, 0);
+
+}
+
+function switchPanelTab(tab){
+
+    const tabs = {
+
+        transactions: {
+            btn: document.getElementById("tx-panel-tab-btn"),
+            content: document.getElementById("tx-panel-tab-content")
+        },
+
+        dispensers: {
+            btn: document.getElementById("dispensers-panel-tab-btn"),
+            content: document.getElementById("dispensers-panel-tab-content")
+        },
+
+        orders: {
+            btn: document.getElementById("orders-panel-tab-btn"),
+            content: document.getElementById("orders-panel-tab-content")
+        }
+
+    };
+
+    Object.keys(tabs).forEach(key=>{
+
+        const isActive =
+        key === tab;
+
+        tabs[key].btn.classList.toggle("active", isActive);
+
+        tabs[key].content.style.display = isActive ? "" : "none";
+
+    });
+
+    adjustPanelWidths();
+
+}
+
+
+const DISPENSERS_PAGE_SIZE = 100;
+
+let dispensersPage = 1;
+let dispensersTotalCount = null;
+
+
+function computePageOffset(page, pageSize){
+
+    return Math.max(0, (page - 1) * pageSize);
+
+}
+
+
+function renderPaginationControls(containerId, page, totalCount, pageSize, goToPageFn){
+
+    const container =
+    document.getElementById(containerId);
+
+    if(!container)
+        return;
+
+    if(totalCount == null){
+
+        container.innerHTML = "";
+        return;
+
+    }
+
+    const totalPages =
+    Math.max(1, Math.ceil(totalCount / pageSize));
+
+    const atFirst =
+    page <= 1;
+
+    const atLast =
+    page >= totalPages;
+
+    container.innerHTML = `
+        <button ${atFirst ? "disabled" : ""} onclick="${goToPageFn}(${page - 1})">&lsaquo; Prev</button>
+        <span>Page ${formatNumber(page)} of ${formatNumber(totalPages)} (${formatNumber(totalCount)} total)</span>
+        <button ${atLast ? "disabled" : ""} onclick="${goToPageFn}(${page + 1})">Next &rsaquo;</button>
+    `;
+
+}
+
+
+function goToDispensersPage(page){
+
+    loadDispensers(page);
+
+}
+
+
+async function loadDispensers(page = dispensersPage){
+
+    if(!apiCallsAllowed())
+        return;
+
+    dispensersPage = page;
+
+    try {
+
+        const offset =
+        computePageOffset(page, DISPENSERS_PAGE_SIZE);
+
+        const url =
+        `https://api.counterparty.io:4000/v2/dispensers?limit=${DISPENSERS_PAGE_SIZE}&verbose=true&status=0`
+        + (offset > 0 ? `&offset=${offset}` : "");
+
+        const response =
+        await fetch(url);
+
+        const json =
+        await response.json();
+
+        dispensersTotalCount =
+        json.result_count ?? dispensersTotalCount ?? 0;
+
+        const dispensers =
+        (json.result || []).filter(d => d.status === 0);
+
+        let html="";
+
+        dispensers.forEach(d=>{
+
+            const rowStyle =
+            isNotUnitQuantity(d.give_quantity_normalized ?? d.give_quantity)
+            ? ' style="background:rgba(229,57,53,0.18);"'
+            : "";
+
+            html += `
+
+            <tr${rowStyle}>
+
+            <td>${formatNumber(d.tx_index ?? "")}</td>
+
+            <td>${formatTime(d.block_time ?? "")}</td>
+
+            <td>${sourceLinkHtml(d.source)}</td>
+
+            <td>${assetLinkHtml(d.asset, d.asset_longname ?? d.asset_info?.asset_longname)}</td>
+
+            <td>${formatNumber(d.give_quantity_normalized ?? d.give_quantity ?? "")}</td>
+
+            <td>${formatNumber(d.give_remaining_normalized ?? d.give_remaining ?? "")}</td>
+
+            <td>${formatNumber(d.escrow_quantity_normalized ?? d.escrow_quantity ?? "")}</td>
+
+            <td>${formatNumber(d.satoshirate_normalized ?? d.satoshirate ?? "")}</td>
+
+            <td>${formatNumber(d.status ?? "")}</td>
+
+            <td>
+
+            <a target="_blank" href="https://mempool.space/tx/${d.tx_hash}">L1</a>
+            &nbsp;
+            <a href="#" onclick="showTransactionDetail('${d.tx_hash}', 'dispenser');return false;">L2</a>
+
+            </td>
+
+            </tr>
+
+            `;
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="10" class="loading">
+            No dispensers
+            </td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("dispensers-tbody").innerHTML =
+        html;
+
+        renderPaginationControls(
+            "dispensers-pagination",
+            dispensersPage,
+            dispensersTotalCount,
+            DISPENSERS_PAGE_SIZE,
+            "goToDispensersPage"
+        );
+
+    }
+
+    catch(e){
+
+        document.getElementById("dispensers-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="10" class="loading">
+        API unavailable
+        </td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+const ORDERS_PAGE_SIZE = 100;
+
+let ordersPage = 1;
+let ordersTotalCount = null;
+
+
+function goToOrdersPage(page){
+
+    loadOrders(page);
+
+}
+
+
+async function loadOrders(page = ordersPage){
+
+    if(!apiCallsAllowed())
+        return;
+
+    ordersPage = page;
+
+    try {
+
+        const offset =
+        computePageOffset(page, ORDERS_PAGE_SIZE);
+
+        const url =
+        `https://api.counterparty.io:4000/v2/orders?limit=${ORDERS_PAGE_SIZE}&verbose=true&status=open`
+        + (offset > 0 ? `&offset=${offset}` : "");
+
+        const response =
+        await fetch(url);
+
+        const json =
+        await response.json();
+
+        ordersTotalCount =
+        json.result_count ?? ordersTotalCount ?? 0;
+
+        const orders =
+        (json.result || []).filter(o => o.status === "open");
+
+        let html="";
+
+        orders.forEach(o=>{
+
+            html += `
+
+            <tr>
+
+            <td>${formatNumber(o.tx_index ?? "")}</td>
+
+            <td>${formatTime(o.block_time ?? "")}</td>
+
+            <td>${sourceLinkHtml(o.source)}</td>
+
+            <td>${formatNumber(o.get_quantity_normalized ?? o.get_quantity ?? "")}</td>
+
+            <td>${assetLinkHtml(o.get_asset, o.get_asset_longname)}</td>
+
+            <td>${formatNumber(o.give_quantity_normalized ?? o.give_quantity ?? "")}</td>
+
+            <td>${assetLinkHtml(o.give_asset, o.give_asset_longname)}</td>
+
+            <td>${formatNumber(o.status ?? "")}</td>
+
+            <td>
+
+            <a target="_blank" href="https://mempool.space/tx/${o.tx_hash}">L1</a>
+            &nbsp;
+            <a href="#" onclick="showTransactionDetail('${o.tx_hash}', 'order');return false;">L2</a>
+
+            </td>
+
+            </tr>
+
+            `;
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="9" class="loading">
+            No orders
+            </td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("orders-tbody").innerHTML =
+        html;
+
+        renderPaginationControls(
+            "orders-pagination",
+            ordersPage,
+            ordersTotalCount,
+            ORDERS_PAGE_SIZE,
+            "goToOrdersPage"
+        );
+
+    }
+
+    catch(e){
+
+        document.getElementById("orders-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="9" class="loading">
+        API unavailable
+        </td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+const TX_PAGE_SIZE = 100;
+
+let txPage = 1;
+let txTotalCount = null;
+
+
+function goToTransactionsPage(page){
+
+    loadTransactions(page);
+
+}
+
+
+async function loadTransactions(page = txPage){
+
+if(!apiCallsAllowed())
+        return;
+
+txPage = page;
+
+try {
+
+const offset =
+        computePageOffset(page, TX_PAGE_SIZE);
+
+const url =
+        `https://api.counterparty.io:4000/v2/transactions?limit=${TX_PAGE_SIZE}&verbose=true`
+        + (offset > 0 ? `&offset=${offset}` : "");
+
+const response =
+        await fetch(url);
+
+const json =
+        await response.json();
+
+lastTransactions =
+        json.result || [];
+
+txTotalCount =
+        json.result_count ?? txTotalCount ?? 0;
+
+renderTransactionRows();
+
+renderPaginationControls(
+        "tx-pagination",
+        txPage,
+        txTotalCount,
+        TX_PAGE_SIZE,
+        "goToTransactionsPage"
+    );
+
+document.getElementById("total-tx-value").innerText =
+        (txTotalCount != null ? formatNumber(txTotalCount) : "—");
+
+if(txPage === 1){
+
+        const nowSeconds =
+        Date.now() / 1000;
+
+        const count24h =
+        lastTransactions.filter(tx=>{
+
+            if(!tx.block_time)
+                return false;
+
+            return (nowSeconds - tx.block_time) <= 86400;
+
+        }).length;
+
+        document.getElementById("total-tx-24h-value").innerText =
+        formatNumber(count24h)
+        + (count24h === lastTransactions.length && lastTransactions.length > 0 ? "+" : "");
+
+    }
+
+loadDispensers();
+
+loadOrders();
+
+}
+
+    catch(e){
+
+tbody.innerHTML =
+        `
+        <tr>
+        <td colspan="13" class="loading">
+        API unavailable
+        </td>
+        </tr>
+        `;
+
+console.error(e);
+
+    }
+
+}
+
+function renderMempoolRows(){
+
+const mempoolTbody =
+    document.getElementById("mempool-tbody");
+
+const filtered =
+    lastMempoolRows.filter(
+        r => isTypeIncluded(
+            mempoolSelectedTypes,
+            r.detail.transactionType ?? r.detail.type
+        )
+    );
+
+let html="";
+
+filtered.forEach(r=>{
+
+const hash =
+        r.hash;
+
+        const detail =
+        r.detail;
+
+const displayType =
+        detail.transactionType ?? detail.type;
+
+        const displaySource =
+        (displayType === "utxomove" && detail.sourceAddress)
+        ? detail.sourceAddress
+        : (displayType === "dispense" && detail.newTransactionSource)
+        ? detail.newTransactionSource
+        : detail.source;
+
+        const showQty =
+        displayType === "order";
+
+        const qty1Display =
+        displayType === "order"
+        ? (detail.qty1 ?? "")
+        : (displayType === "dispense" ? (detail.dispenseQty1 ?? "")
+        : ((displayType === "enhanced_send" || displayType === "destroy") ? (detail.sendQty1 ?? "") : ""));
+
+html += `
+
+        <tr>
+
+        <td>Pending</td>
+
+        <td>Pending</td>
+
+        <td>${formatTime(r.timestamp)}</td>
+
+        <td>${(() => {
+
+        if(!displayType)
+            return "";
+
+        const color =
+        typeColor(displayType);
+
+        return `<span style="background:${color.bg};color:${color.text};padding:3px 10px;border-radius:12px;font-size:12px;white-space:nowrap;">${displayType}</span>`;
+
+        })()}</td>
+
+        <td>${sourceLinkHtml(displaySource)}</td>
+
+        <td>${formatNumber(qty1Display)}</td>
+
+        <td>${assetLinkHtml(detail.asset1, detail.longname1)}</td>
+
+        <td>${showQty ? formatNumber(detail.qty2 ?? "") : ""}</td>
+
+        <td>${assetLinkHtml(detail.asset2, detail.longname2)}</td>
+
+<td>
+
+        <a target="_blank" href="https://mempool.space/tx/${hash}">L1</a>
+        &nbsp;
+        <a href="#" onclick="showTransactionDetail('${hash}', '${displayType ?? ""}', true, true);return false;">L2</a>
+
+        </td>
+
+        <td>${detail.dispenserStatus ?? detail.status ?? ""}</td>
+
+        <td>${formatFee(detail.fee)}</td>
+
+        <td>${displayType === "dispenser" ? formatNumber(detail.satoshirateNormalized ?? "") : ""}</td>
+
+</tr>
+
+        `;
+
+});
+
+if(!html){
+
+        html =
+        `
+        <tr>
+        <td colspan="13" class="loading">
+        No mempool transactions
+        </td>
+        </tr>
+        `;
+
+    }
+
+mempoolTbody.innerHTML=html;
+
+updateTypeFilterLabel("mempool");
+
+adjustPanelWidths();
+
+}
+
+async function loadMempool(){
+
+if(!apiCallsAllowed())
+        return;
+
+const mempoolStatus =
+    document.getElementById("mempool-status");
+
+    const mempoolTbody =
+    document.getElementById("mempool-tbody");
+
+    const mempoolCount =
+    document.getElementById("mempool-count");
+
+mempoolStatus.innerText="Refreshing...";
+
+try {
+
+const response =
+        await fetch(MEMPOOL_API);
+
+const json =
+        await response.json();
+
+const events =
+        json.result || [];
+
+const parsed =
+        events.filter(
+            e => e.event === "TRANSACTION_PARSED"
+        );
+
+const detailsByTx = {};
+
+events.forEach(e=>{
+
+            if(e.event === "TRANSACTION_PARSED")
+                return;
+
+            const hash =
+            e.tx_hash ?? e.params?.tx_hash;
+
+            if(!hash)
+                return;
+
+            if(!detailsByTx[hash])
+                detailsByTx[hash] = {};
+
+            const d =
+            detailsByTx[hash];
+
+            if(!d.type)
+                d.type = e.event;
+
+            if(
+                d.transactionType == null
+                && e.params?.transaction_type != null
+            )
+                d.transactionType = e.params.transaction_type;
+
+            if(!d.source && e.params?.source)
+                d.source = e.params.source;
+
+            if(
+                d.newTransactionSource == null
+                && e.event === "NEW_TRANSACTION"
+                && e.params?.source != null
+            )
+                d.newTransactionSource = e.params.source;
+
+            if(
+                d.sourceAddress == null
+                && e.params?.source_address != null
+            )
+                d.sourceAddress = e.params.source_address;
+
+            if(!d.asset1 && (e.params?.asset || e.params?.get_asset))
+                d.asset1 = e.params.asset ?? e.params.get_asset;
+
+            if(!d.asset2 && e.params?.give_asset)
+                d.asset2 = e.params.give_asset;
+
+            if(d.qty1 == null && e.params?.get_quantity_normalized != null)
+                d.qty1 = e.params.get_quantity_normalized;
+
+            if(d.qty2 == null && e.params?.give_quantity_normalized != null)
+                d.qty2 = e.params.give_quantity_normalized;
+
+            if(
+                d.longname1 == null
+                && (e.params?.asset_info?.asset_longname || e.params?.get_asset_info?.asset_longname)
+            )
+                d.longname1 = e.params.asset_info?.asset_longname ?? e.params.get_asset_info?.asset_longname;
+
+            if(
+                d.longname2 == null
+                && e.params?.give_asset_info?.asset_longname
+            )
+                d.longname2 = e.params.give_asset_info.asset_longname;
+
+            if(
+                d.satoshirateNormalized == null
+                && e.params?.satoshirate_normalized != null
+            )
+                d.satoshirateNormalized = e.params.satoshirate_normalized;
+
+            if(
+                d.dispenseQty1 == null
+                && e.params?.dispense_quantity_normalized != null
+            )
+                d.dispenseQty1 = e.params.dispense_quantity_normalized;
+
+            if(
+                d.sendQty1 == null
+                && e.params?.quantity_normalized != null
+            )
+                d.sendQty1 = e.params.quantity_normalized;
+
+            if(d.status == null && e.params?.status != null)
+                d.status = e.params.status;
+
+            if(
+                d.dispenserStatus == null
+                && e.params?.dispenser_status != null
+            )
+                d.dispenserStatus = e.params.dispenser_status;
+
+            if(
+                d.fee == null
+                && e.event === "NEW_TRANSACTION"
+                && e.params?.fee != null
+            )
+                d.fee = e.params.fee;
+
+        });
+
+lastMempoolRows =
+        parsed.map(e=>{
+
+            const hash =
+            e.tx_hash ?? e.params?.tx_hash;
+
+            return {
+
+                hash: hash,
+                timestamp: e.timestamp,
+                txIndex: e.tx_index ?? e.params?.tx_index,
+                detail: detailsByTx[hash] || {}
+
+            };
+
+        });
+
+renderMempoolRows();
+
+const currentHashes =
+        new Set(
+            lastMempoolRows.map(r => r.hash)
+        );
+
+if(knownMempoolHashes !== null){
+
+            let hasNew = false;
+
+            currentHashes.forEach(hash=>{
+
+                if(!knownMempoolHashes.has(hash))
+                    hasNew = true;
+
+            });
+
+            if(hasNew)
+                playBeep(880);
+
+            currentHashes.forEach(hash=>{
+
+                knownMempoolHashes.add(hash);
+
+            });
+
+        }
+
+        else {
+
+            knownMempoolHashes = currentHashes;
+
+        }
+
+if(lastMempoolItemCount !== null && parsed.length < lastMempoolItemCount){
+
+            setTimeout(()=>{
+
+                loadNodeInfo();
+                loadTransactions();
+
+            }, 4000);
+
+        }
+
+lastMempoolItemCount = parsed.length;
+
+mempoolCount.innerText =
+        " (" + formatNumber(parsed.length) + ")";
+
+mempoolStatus.innerText =
+        "Updated "
+        + new Date().toLocaleTimeString();
+
+}
+
+    catch(e){
+
+mempoolTbody.innerHTML =
+        `
+        <tr>
+        <td colspan="13" class="loading">
+        API unavailable
+        </td>
+        </tr>
+        `;
+
+mempoolCount.innerText="";
+
+mempoolStatus.innerText="Offline";
+
+console.error(e);
+
+    }
+
+}
+
+let currentBalanceAddress = null;
+
+function switchAddressTab(tab){
+
+    const balancesBtn =
+    document.getElementById("balances-tab-btn");
+
+    const ownershipsBtn =
+    document.getElementById("ownerships-tab-btn");
+
+    const balancesContent =
+    document.getElementById("balances-tab-content");
+
+    const ownershipsContent =
+    document.getElementById("ownerships-tab-content");
+
+
+    if(tab === "ownerships"){
+
+        balancesBtn.classList.remove("active");
+        ownershipsBtn.classList.add("active");
+
+        balancesContent.style.display = "none";
+        ownershipsContent.style.display = "";
+
+        loadAssetOwnerships(currentBalanceAddress);
+
+    }
+
+    else {
+
+        ownershipsBtn.classList.remove("active");
+        balancesBtn.classList.add("active");
+
+        ownershipsContent.style.display = "none";
+        balancesContent.style.display = "";
+
+    }
+
+}
+
+
+async function loadAssetOwnerships(address){
+
+    if(!apiCallsAllowed())
+        return;
+
+    document.getElementById("ownership-modal-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="1" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    document.getElementById("ownership-modal-count").innerText =
+    "";
+
+    try {
+
+        const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/addresses/${address}/assets?verbose=true`
+        );
+
+        const json =
+        await response.json();
+
+        const assets =
+        json.result || [];
+
+        const resultCount =
+        json.result_count ?? assets.length;
+
+        assets.sort(
+            (a,b) =>
+            (a.asset ?? "").localeCompare(b.asset ?? "")
+        );
+
+        let html="";
+
+        assets.forEach(a=>{
+
+            html += `
+            <tr>
+            <td>${assetLinkHtml(a.asset)}</td>
+            </tr>
+            `;
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="1" class="loading">No assets</td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("ownership-modal-tbody").innerHTML =
+        html;
+
+        document.getElementById("ownership-modal-count").innerText =
+        " (" + formatNumber(resultCount) + ")";
+
+    }
+
+    catch(e){
+
+        document.getElementById("ownership-modal-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="1" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+async function loadBtcBalance(address){
+
+    if(!apiCallsAllowed())
+        return;
+
+    try {
+
+        const response =
+        await fetch(
+            `https://blockchain.info/balance?active=${address}`
+        );
+
+        const json =
+        await response.json();
+
+        const satoshis =
+        json[address]?.final_balance;
+
+        const txCount =
+        json[address]?.n_tx;
+
+        if(satoshis == null)
+            return;
+
+        const btc =
+        (satoshis / 1e8).toFixed(8);
+
+        document.getElementById("btc-balance-display").innerText =
+        "BTC balance: " + formatNumber(btc) + " BTC";
+
+        document.getElementById("btc-tx-count-display").innerText =
+        txCount != null
+        ? "Tx count: " + formatNumber(txCount)
+        : "";
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+
+async function showBalances(address, updateHash=true){
+
+if(!apiCallsAllowed())
+        return;
+
+if(updateHash){
+
+        history.pushState(
+            { balanceAddress: address },
+            "",
+            "#address/" + encodeURIComponent(address)
+        );
+
+    }
+
+currentBalanceAddress = address;
+
+    switchAddressTab("balances");
+
+document.getElementById("balance-modal-address").innerText =
+    address;
+
+document.getElementById("balance-modal-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="2" class="loading">Loading...</td>
+    </tr>
+    `;
+
+document.getElementById("balance-modal-count").innerText =
+    "";
+
+document.getElementById("btc-balance-display").innerText =
+    "";
+
+document.getElementById("btc-tx-count-display").innerText =
+    "";
+
+document.getElementById("balance-modal").classList.add("open");
+
+bringModalToFront("balance-modal");
+
+loadBtcBalance(address);
+
+try {
+
+const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/addresses/${address}/balances?verbose=true&sort=asset:asc`
+        );
+
+const json =
+        await response.json();
+
+const balances =
+        json.result || [];
+
+const resultCount =
+        json.result_count ?? balances.length;
+
+balances.sort(
+            (a,b) =>
+            (a.asset ?? "").localeCompare(b.asset ?? "")
+        );
+
+let html="";
+
+balances.forEach(b=>{
+
+html += `
+
+            <tr>
+
+            <td>${assetLinkHtml(b.asset)}</td>
+
+            <td>${formatNumber(b.quantity_normalized ?? b.quantity ?? "")}</td>
+
+            </tr>
+
+            `;
+
+});
+
+if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="2" class="loading">No balances</td>
+            </tr>
+            `;
+
+        }
+
+document.getElementById("balance-modal-tbody").innerHTML =
+        html;
+
+document.getElementById("balance-modal-count").innerText =
+        " (" + formatNumber(resultCount) + ")"
+        + (resultCount > 100 ? " — Showing first 100" : "");
+
+}
+
+    catch(e){
+
+document.getElementById("balance-modal-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="2" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+console.error(e);
+
+    }
+
+}
+
+function closeBalanceModal(){
+
+    document.getElementById("balance-modal").classList.remove("open");
+
+if(location.hash){
+
+        history.pushState(
+            {},
+            "",
+            location.pathname + location.search
+        );
+
+    }
+
+}
+
+let currentAssetName = null;
+
+let assetOrdersLoadedFor = null;
+
+let assetDispensersLoadedFor = null;
+
+let assetHoldersLoadedFor = null;
+
+
+function switchAssetModalTab(tab){
+
+    const tabs = {
+
+        info: {
+            btn: document.getElementById("asset-info-tab-btn"),
+            content: document.getElementById("asset-info-tab-content")
+        },
+
+        holders: {
+            btn: document.getElementById("asset-holders-tab-btn"),
+            content: document.getElementById("asset-holders-tab-content")
+        },
+
+        orders: {
+            btn: document.getElementById("asset-orders-tab-btn"),
+            content: document.getElementById("asset-orders-tab-content")
+        },
+
+        dispensers: {
+            btn: document.getElementById("asset-dispensers-tab-btn"),
+            content: document.getElementById("asset-dispensers-tab-content")
+        }
+
+    };
+
+    Object.keys(tabs).forEach(key=>{
+
+        const isActive =
+        key === tab;
+
+        tabs[key].btn.classList.toggle("active", isActive);
+
+        tabs[key].content.style.display = isActive ? "" : "none";
+
+    });
+
+    if(tab === "holders" && assetHoldersLoadedFor !== currentAssetName)
+        loadAssetHolders(currentAssetName);
+
+    if(tab === "orders" && assetOrdersLoadedFor !== currentAssetName)
+        loadAssetOrders(currentAssetName);
+
+    if(tab === "dispensers" && assetDispensersLoadedFor !== currentAssetName)
+        loadAssetDispensers(currentAssetName);
+
+}
+
+
+async function loadAssetHolders(asset){
+
+    if(!apiCallsAllowed())
+        return;
+
+    document.getElementById("asset-holders-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="3" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    try {
+
+        const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/assets/${asset}/holders?limit=50&sort=quantity:desc&verbose=true`
+        );
+
+        const json =
+        await response.json();
+
+        const holders =
+        json.result || [];
+
+        let html="";
+
+        holders.forEach((h, idx)=>{
+
+            html += `
+
+            <tr>
+
+            <td>${idx + 1}</td>
+
+            <td>${sourceLinkHtml(h.address)}</td>
+
+            <td>${formatNumber(h.quantity_normalized ?? "")}</td>
+
+            </tr>
+
+            `;
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="3" class="loading">No holders found</td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("asset-holders-tbody").innerHTML =
+        html;
+
+        assetHoldersLoadedFor = asset;
+
+    }
+
+    catch(e){
+
+        document.getElementById("asset-holders-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="3" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+let lastAssetOrders = [];
+let assetOrdersSortColumn = null;
+let assetOrdersSortAscending = true;
+
+
+function genericCompare(a, b){
+
+    const numA =
+    typeof a === "number" ? a : parseFloat(a);
+
+    const numB =
+    typeof b === "number" ? b : parseFloat(b);
+
+    if(!isNaN(numA) && !isNaN(numB))
+        return numA - numB;
+
+    return String(a ?? "").localeCompare(String(b ?? ""));
+
+}
+
+
+function sortAssetOrdersBy(column){
+
+    if(assetOrdersSortColumn === column){
+
+        assetOrdersSortAscending = !assetOrdersSortAscending;
+
+    }
+
+    else {
+
+        assetOrdersSortColumn = column;
+        assetOrdersSortAscending = true;
+
+    }
+
+    renderAssetOrdersRows();
+
+}
+
+
+function renderAssetOrdersRows(){
+
+    const orders =
+    [...lastAssetOrders];
+
+    if(assetOrdersSortColumn){
+
+        orders.sort((a,b)=>{
+
+            const valA =
+            a[assetOrdersSortColumn + "_normalized"] ?? a[assetOrdersSortColumn];
+
+            const valB =
+            b[assetOrdersSortColumn + "_normalized"] ?? b[assetOrdersSortColumn];
+
+            const result =
+            genericCompare(valA, valB);
+
+            return assetOrdersSortAscending ? result : -result;
+
+        });
+
+    }
+
+    ["tx_index", "block_time", "source", "get_quantity", "get_asset", "give_quantity", "give_asset", "status"].forEach(col=>{
+
+        const el =
+        document.getElementById("assetord-sort-" + col);
+
+        if(el)
+            el.innerText = "";
+
+    });
+
+    if(assetOrdersSortColumn){
+
+        const activeEl =
+        document.getElementById("assetord-sort-" + assetOrdersSortColumn);
+
+        if(activeEl)
+            activeEl.innerText = assetOrdersSortAscending ? " \u25B2" : " \u25BC";
+
+    }
+
+    let html="";
+
+    orders.forEach(o=>{
+
+        html += `
+
+        <tr>
+
+        <td>${formatNumber(o.tx_index ?? "")}</td>
+
+        <td>${formatTime(o.block_time ?? "")}</td>
+
+        <td>${sourceLinkHtml(o.source)}</td>
+
+        <td>${formatNumber(o.get_quantity_normalized ?? o.get_quantity ?? "")}</td>
+
+        <td>${assetLinkHtml(o.get_asset, o.get_asset_longname)}</td>
+
+        <td>${formatNumber(o.give_quantity_normalized ?? o.give_quantity ?? "")}</td>
+
+        <td>${assetLinkHtml(o.give_asset, o.give_asset_longname)}</td>
+
+        <td>${formatNumber(o.status ?? "")}</td>
+
+        <td>
+
+        <a target="_blank" href="https://mempool.space/tx/${o.tx_hash}">L1</a>
+        &nbsp;
+        <a href="#" onclick="showTransactionDetail('${o.tx_hash}', 'order');return false;">L2</a>
+
+        </td>
+
+        </tr>
+
+        `;
+
+    });
+
+    if(!html){
+
+        html =
+        `
+        <tr>
+        <td colspan="9" class="loading">No open orders</td>
+        </tr>
+        `;
+
+    }
+
+    document.getElementById("asset-orders-tbody").innerHTML =
+    html;
+
+}
+
+
+async function loadAssetOrders(asset){
+
+    if(!apiCallsAllowed())
+        return;
+
+    document.getElementById("asset-orders-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="9" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    assetOrdersSortColumn = null;
+    assetOrdersSortAscending = true;
+
+    try {
+
+        const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/assets/${asset}/orders?status=open&verbose=true`
+        );
+
+        const json =
+        await response.json();
+
+        lastAssetOrders =
+        json.result || [];
+
+        renderAssetOrdersRows();
+
+        assetOrdersLoadedFor = asset;
+
+    }
+
+    catch(e){
+
+        document.getElementById("asset-orders-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="9" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+let lastAssetDispensers = [];
+let assetDispensersSortColumn = null;
+let assetDispensersSortAscending = true;
+
+
+function sortAssetDispensersBy(column){
+
+    if(assetDispensersSortColumn === column){
+
+        assetDispensersSortAscending = !assetDispensersSortAscending;
+
+    }
+
+    else {
+
+        assetDispensersSortColumn = column;
+        assetDispensersSortAscending = true;
+
+    }
+
+    renderAssetDispensersRows();
+
+}
+
+
+function renderAssetDispensersRows(){
+
+    const dispensers =
+    [...lastAssetDispensers];
+
+    if(assetDispensersSortColumn){
+
+        dispensers.sort((a,b)=>{
+
+            const valA =
+            a[assetDispensersSortColumn + "_normalized"] ?? a[assetDispensersSortColumn];
+
+            const valB =
+            b[assetDispensersSortColumn + "_normalized"] ?? b[assetDispensersSortColumn];
+
+            const result =
+            genericCompare(valA, valB);
+
+            return assetDispensersSortAscending ? result : -result;
+
+        });
+
+    }
+
+    ["tx_index", "block_time", "source", "asset", "give_quantity", "give_remaining", "escrow_quantity", "satoshirate", "status"].forEach(col=>{
+
+        const el =
+        document.getElementById("assetdisp-sort-" + col);
+
+        if(el)
+            el.innerText = "";
+
+    });
+
+    if(assetDispensersSortColumn){
+
+        const activeEl =
+        document.getElementById("assetdisp-sort-" + assetDispensersSortColumn);
+
+        if(activeEl)
+            activeEl.innerText = assetDispensersSortAscending ? " \u25B2" : " \u25BC";
+
+    }
+
+    let html="";
+
+    dispensers.forEach(d=>{
+
+        const rowStyle =
+        isNotUnitQuantity(d.give_quantity_normalized ?? d.give_quantity)
+        ? ' style="background:rgba(229,57,53,0.18);"'
+        : "";
+
+        html += `
+
+        <tr${rowStyle}>
+
+        <td>${formatNumber(d.tx_index ?? "")}</td>
+
+        <td>${formatTime(d.block_time ?? "")}</td>
+
+        <td>${sourceLinkHtml(d.source)}</td>
+
+        <td>${assetLinkHtml(d.asset, d.asset_longname ?? d.asset_info?.asset_longname)}</td>
+
+        <td>${formatNumber(d.give_quantity_normalized ?? d.give_quantity ?? "")}</td>
+
+        <td>${formatNumber(d.give_remaining_normalized ?? d.give_remaining ?? "")}</td>
+
+        <td>${formatNumber(d.escrow_quantity_normalized ?? d.escrow_quantity ?? "")}</td>
+
+        <td>${formatNumber(d.satoshirate_normalized ?? d.satoshirate ?? "")}</td>
+
+        <td>${formatNumber(d.status ?? "")}</td>
+
+        <td>
+
+        <a target="_blank" href="https://mempool.space/tx/${d.tx_hash}">L1</a>
+        &nbsp;
+        <a href="#" onclick="showTransactionDetail('${d.tx_hash}', 'dispenser');return false;">L2</a>
+
+        </td>
+
+        </tr>
+
+        `;
+
+    });
+
+    if(!html){
+
+        html =
+        `
+        <tr>
+        <td colspan="10" class="loading">No open dispensers</td>
+        </tr>
+        `;
+
+    }
+
+    document.getElementById("asset-dispensers-tbody").innerHTML =
+    html;
+
+}
+
+
+async function loadAssetDispensers(asset){
+
+    if(!apiCallsAllowed())
+        return;
+
+    document.getElementById("asset-dispensers-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="10" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    assetDispensersSortColumn = null;
+    assetDispensersSortAscending = true;
+
+    try {
+
+        const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/assets/${asset}/dispensers?status=0&verbose=true`
+        );
+
+        const json =
+        await response.json();
+
+        lastAssetDispensers =
+        json.result || [];
+
+        renderAssetDispensersRows();
+
+        assetDispensersLoadedFor = asset;
+
+    }
+
+    catch(e){
+
+        document.getElementById("asset-dispensers-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="10" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+async function showAssetInfo(asset, updateHash=true){
+
+if(!apiCallsAllowed())
+        return;
+
+if(updateHash){
+
+        history.pushState(
+            { assetName: asset },
+            "",
+            "#asset/" + encodeURIComponent(asset)
+        );
+
+    }
+
+document.getElementById("asset-modal-name").innerText =
+    asset;
+
+currentAssetName = asset;
+    assetOrdersLoadedFor = null;
+    assetDispensersLoadedFor = null;
+    assetHoldersLoadedFor = null;
+
+    switchAssetModalTab("info");
+
+document.getElementById("asset-modal-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="2" class="loading">Loading...</td>
+    </tr>
+    `;
+
+document.getElementById("asset-modal").classList.add("open");
+
+bringModalToFront("asset-modal");
+
+try {
+
+const response =
+        await fetch(
+            `https://api.counterparty.io:4000/v2/assets/${asset}?verbose=true`
+        );
+
+const json =
+        await response.json();
+
+const info =
+        json.result || {};
+
+let description =
+        info.description ?? "";
+
+if(description.length > 200){
+
+            description =
+            description.substring(0, 200) + "...";
+
+        }
+
+const locked =
+        info.locked === true
+        ? "Yes"
+        : (info.locked === false ? "No" : "");
+
+const divisible =
+        info.divisible === true
+        ? "Yes"
+        : (info.divisible === false ? "No" : "");
+
+const supply =
+        formatNumber(info.supply_normalized ?? "");
+
+const created =
+        formatDate(info.first_issuance_block_time);
+
+const rows = [
+            ["Asset", info.asset ?? asset],
+            ["Long Name", info.asset_longname ?? ""],
+            ["Locked", locked],
+            ["Divisible", divisible],
+            ["Supply", supply],
+            ["Created", created],
+            ["Description", description]
+        ];
+
+let html="";
+
+rows.forEach(([label, value])=>{
+
+            html += `
+            <tr>
+            <td class="asset-info-label">${label}</td>
+            <td class="asset-info-value">${value}</td>
+            </tr>
+            `;
+
+        });
+
+document.getElementById("asset-modal-tbody").innerHTML =
+        html;
+
+}
+
+    catch(e){
+
+document.getElementById("asset-modal-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="2" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+console.error(e);
+
+    }
+
+}
+
+function closeAssetModal(){
+
+    document.getElementById("asset-modal").classList.remove("open");
+
+if(location.hash){
+
+        history.pushState(
+            {},
+            "",
+            location.pathname + location.search
+        );
+
+    }
+
+}
+
+
+function escapeHtml(str){
+
+    const div =
+    document.createElement("div");
+
+    div.textContent = str;
+
+    return div.innerHTML;
+
+}
+
+
+const ALWAYS_HIDDEN_TX_FIELDS =
+new Set([
+    "asset_info",
+    "give_asset_info",
+    "get_asset_info",
+    "tx_hash",
+    "get_asset_divisible",
+    "give_asset_divisible",
+    "block_time"
+]);
+
+
+const HIDE_IF_EMPTY_TX_FIELDS =
+new Set(["source_address", "destination_address"]);
+
+
+const LABEL_OVERRIDES = {
+
+    dispense: {
+        source: "seller",
+        destination: "buyer"
+    }
+
+};
+
+
+function transformDispenseItem(item){
+
+    const clone =
+    { ...item };
+
+    let satoshirateNormalized =
+    clone.satoshirate_normalized;
+
+    if(
+        satoshirateNormalized == null
+        && clone.dispenser
+        && typeof clone.dispenser === "object"
+    ){
+
+        satoshirateNormalized =
+        clone.dispenser.satoshirate_normalized;
+
+    }
+
+    delete clone.dispenser;
+
+    if(satoshirateNormalized != null)
+        clone.satoshirate_normalized = satoshirateNormalized;
+
+    return clone;
+
+}
+
+
+function buildFieldRows(obj, options={}){
+
+    const hideEmpty =
+    options.hideEmpty === true;
+
+    const keys =
+    Object.keys(obj);
+
+    const skip =
+    new Set();
+
+    keys.forEach(k=>{
+
+        if(k.endsWith("_normalized")){
+
+            const base =
+            k.slice(0, -"_normalized".length);
+
+            if(keys.includes(base))
+                skip.add(base);
+
+        }
+
+    });
+
+    return keys
+
+        .filter(k => !skip.has(k) && !ALWAYS_HIDDEN_TX_FIELDS.has(k))
+
+        .filter(k => {
+
+            if(!hideEmpty)
+                return true;
+
+            const v =
+            obj[k];
+
+            return v !== null && v !== undefined && v !== "";
+
+        })
+
+        .filter(k => {
+
+            if(!HIDE_IF_EMPTY_TX_FIELDS.has(k))
+                return true;
+
+            const v =
+            obj[k];
+
+            return v !== null && v !== undefined && v !== "";
+
+        })
+
+        .map(k=>{
+
+            let value =
+            obj[k];
+
+            if(value !== null && typeof value === "object")
+                value = JSON.stringify(value);
+
+            return [k, value];
+
+        });
+
+}
+
+
+async function showTransactionDetail(txHash, transactionType, updateHash=true, isUnconfirmed=false){
+
+    if(!apiCallsAllowed())
+        return;
+
+    if(updateHash){
+
+        history.pushState(
+            { txHash: txHash },
+            "",
+            "#tx/" + encodeURIComponent(txHash)
+        );
+
+    }
+
+    document.getElementById("tx-detail-modal-title").innerText =
+    txHash;
+
+    document.getElementById("tx-detail-modal-type").innerText =
+    "";
+
+    document.getElementById("tx-detail-modal-tbody").innerHTML =
+    `
+    <tr>
+    <td colspan="2" class="loading">Loading...</td>
+    </tr>
+    `;
+
+    document.getElementById("tx-detail-modal").classList.add("open");
+
+    bringModalToFront("tx-detail-modal");
+
+    try {
+
+        let result;
+
+        let effectiveType =
+        transactionType;
+
+        if(isUnconfirmed){
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/transactions/${txHash}?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result || {};
+
+            effectiveType = result.transaction_type;
+
+        }
+
+        else if(transactionType === "order"){
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/orders/${txHash}?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result || {};
+
+        }
+
+        else if(transactionType === "dispenser"){
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/dispensers/${txHash}?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result || {};
+
+            if(result.status === 10 || result.status === 11){
+
+                const genericResponse =
+                await fetch(
+                    `https://api.counterparty.io:4000/v2/transactions/${txHash}?verbose=true`
+                );
+
+                const genericJson =
+                await genericResponse.json();
+
+                result = genericJson.result || result;
+
+            }
+
+        }
+
+        else if(transactionType === "enhanced_send"){
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/transactions/${txHash}/sends?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result ?? {};
+
+        }
+
+        else if(transactionType === "dispense"){
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/transactions/${txHash}/dispenses?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result ?? {};
+
+        }
+
+        else {
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/transactions/${txHash}?verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            result = json.result || {};
+
+            effectiveType = result.transaction_type;
+
+            if(result.transaction_type === "order"){
+
+                const orderResponse =
+                await fetch(
+                    `https://api.counterparty.io:4000/v2/orders/${txHash}?verbose=true`
+                );
+
+                const orderJson =
+                await orderResponse.json();
+
+                result = orderJson.result || result;
+
+            }
+
+            else if(result.transaction_type === "dispenser"){
+
+                const dispenserResponse =
+                await fetch(
+                    `https://api.counterparty.io:4000/v2/dispensers/${txHash}?verbose=true`
+                );
+
+                const dispenserJson =
+                await dispenserResponse.json();
+
+                const dispenserResult =
+                dispenserJson.result || {};
+
+                if(dispenserResult.status !== 10 && dispenserResult.status !== 11){
+
+                    result = dispenserResult || result;
+
+                }
+
+            }
+
+            else if(result.transaction_type === "enhanced_send"){
+
+                const sendsResponse =
+                await fetch(
+                    `https://api.counterparty.io:4000/v2/transactions/${txHash}/sends?verbose=true`
+                );
+
+                const sendsJson =
+                await sendsResponse.json();
+
+                result = sendsJson.result ?? result;
+
+            }
+
+            else if(result.transaction_type === "dispense"){
+
+                const dispensesResponse =
+                await fetch(
+                    `https://api.counterparty.io:4000/v2/transactions/${txHash}/dispenses?verbose=true`
+                );
+
+                const dispensesJson =
+                await dispensesResponse.json();
+
+                result = dispensesJson.result ?? result;
+
+            }
+
+        }
+
+        const items =
+        (Array.isArray(result) ? result : [result])
+        .filter(item => item && Object.keys(item).length > 0);
+
+        document.getElementById("tx-detail-modal-type").innerText =
+        effectiveType ? effectiveType : "Unknown type";
+
+        let html="";
+
+        items.forEach((item, idx)=>{
+
+            const sourceItem =
+            effectiveType === "dispense"
+            ? transformDispenseItem(item)
+            : item;
+
+            const displayData =
+            sourceItem.unpacked_data?.message_data
+            ?? sourceItem.unpacked_data
+            ?? sourceItem;
+
+            const rows =
+            buildFieldRows(displayData, {
+                hideEmpty: effectiveType === "dispenser"
+            });
+
+            const overrides =
+            LABEL_OVERRIDES[effectiveType] || {};
+
+            if(items.length > 1){
+
+                html += `
+                <tr>
+                <td colspan="2" style="font-weight:600;padding-top:16px;border-top:2px solid var(--border);color:var(--text);">Entry ${idx + 1}</td>
+                </tr>
+                `;
+
+            }
+
+            rows.forEach(([label, value])=>{
+
+                const displayLabel =
+                overrides[label] ?? label;
+
+                let valueHtml;
+
+                if(label === "asset" && value){
+
+                    valueHtml = assetLinkHtml(String(value));
+
+                }
+
+                else if(
+                    (label === "source" || label === "destination" || label === "source_address" || label === "destination_address")
+                    && value
+                ){
+
+                    valueHtml = sourceLinkHtml(String(value));
+
+                }
+
+                else {
+
+                    valueHtml = escapeHtml(String(formatNumber(value) ?? ""));
+
+                }
+
+                html += `
+                <tr>
+                <td class="tx-field-label">${escapeHtml(displayLabel)}</td>
+                <td class="asset-info-value">${valueHtml}</td>
+                </tr>
+                `;
+
+            });
+
+        });
+
+        if(!html){
+
+            html =
+            `
+            <tr>
+            <td colspan="2" class="loading">No data</td>
+            </tr>
+            `;
+
+        }
+
+        document.getElementById("tx-detail-modal-tbody").innerHTML =
+        html;
+
+    }
+
+    catch(e){
+
+        document.getElementById("tx-detail-modal-tbody").innerHTML =
+        `
+        <tr>
+        <td colspan="2" class="loading">API unavailable</td>
+        </tr>
+        `;
+
+        console.error(e);
+
+    }
+
+}
+
+
+function closeTxDetailModal(){
+
+    document.getElementById("tx-detail-modal").classList.remove("open");
+
+    if(location.hash){
+
+        history.pushState(
+            {},
+            "",
+            location.pathname + location.search
+        );
+
+    }
+
+}
+
+
+function openSearchModal(){
+
+    document.getElementById("search-input").value = "";
+
+    document.getElementById("search-modal-message").innerText = "";
+
+    document.getElementById("search-modal").classList.add("open");
+
+    bringModalToFront("search-modal");
+
+    setTimeout(()=>{
+
+        document.getElementById("search-input").focus();
+
+    }, 50);
+
+}
+
+
+function closeSearchModal(){
+
+    document.getElementById("search-modal").classList.remove("open");
+
+}
+
+
+function detectSearchType(value){
+
+    if(value.length === 64)
+        return "tx";
+
+    if(/^\d+$/.test(value)){
+
+        const num =
+        parseInt(value, 10);
+
+        if(num >= 0 && num <= 5000000)
+            return "txindex";
+
+    }
+
+    if(
+        value.length < 64
+        && (value.startsWith("1") || value.startsWith("3") || value.startsWith("bc1"))
+    )
+        return "address";
+
+    return "asset";
+
+}
+
+
+async function performSearch(){
+
+    const value =
+    document.getElementById("search-input").value.trim();
+
+    if(!value){
+
+        document.getElementById("search-modal-message").innerText =
+        "Enter a value to search.";
+
+        return;
+
+    }
+
+    const type =
+    detectSearchType(value);
+
+    if(type === "txindex"){
+
+        document.getElementById("search-modal-message").innerText =
+        "Looking up transaction...";
+
+        if(!apiCallsAllowed()){
+
+            closeSearchModal();
+            return;
+
+        }
+
+        try {
+
+            const response =
+            await fetch(
+                `https://api.counterparty.io:4000/v2/transactions?limit=1&cursor=${value}&verbose=true`
+            );
+
+            const json =
+            await response.json();
+
+            const result =
+            Array.isArray(json.result) ? json.result[0] : json.result;
+
+            if(!result || !result.tx_hash){
+
+                document.getElementById("search-modal-message").innerText =
+                "No transaction found for that index.";
+
+                return;
+
+            }
+
+            closeSearchModal();
+
+            showTransactionDetail(result.tx_hash, result.transaction_type, true);
+
+        }
+
+        catch(e){
+
+            document.getElementById("search-modal-message").innerText =
+            "Lookup failed.";
+
+            console.error(e);
+
+        }
+
+        return;
+
+    }
+
+    closeSearchModal();
+
+    if(type === "tx"){
+
+        showTransactionDetail(value, undefined, true);
+
+    }
+
+    else if(type === "address"){
+
+        showBalances(value);
+
+    }
+
+    else {
+
+        showAssetInfo(value);
+
+    }
+
+}
+
+
+function playBeep(frequency=880){
+
+    if(muted)
+        return;
+
+try {
+
+        const ctx =
+        new (window.AudioContext || window.webkitAudioContext)();
+
+        const oscillator =
+        ctx.createOscillator();
+
+        const gain =
+        ctx.createGain();
+
+oscillator.type = "sine";
+        oscillator.frequency.value = frequency;
+
+        gain.gain.value = 0.1;
+
+oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime + 0.15
+        );
+
+    }
+
+    catch(e){
+
+        console.error(e);
+
+    }
+
+}
+
+async function loadNodeInfo(){
+
+if(!apiCallsAllowed())
+        return;
+
+try {
+
+const response =
+        await fetch(NODE_API, { cache: "no-store" });
+
+const json =
+        await response.json();
+
+const newHeight =
+        json.result?.counterparty_height;
+
+const heightChanged =
+        lastBlockHeight !== null
+        && newHeight !== undefined
+        && newHeight !== lastBlockHeight;
+
+if(heightChanged){
+
+            playBeep(500);
+
+            loadTransactions();
+
+            knownMempoolHashes = null;
+
+        }
+
+if(newHeight !== undefined)
+            lastBlockHeight = newHeight;
+
+document.getElementById("block-height-value").innerText =
+        (newHeight != null ? formatNumber(newHeight) : "—");
+
+try {
+
+            const blocksResponse =
+            await fetch(BLOCKS_API, { cache: "no-store" });
+
+const blocksJson =
+            await blocksResponse.json();
+
+const blockTime =
+            blocksJson.result?.[0]?.block_time;
+
+document.getElementById("block-height-time").innerText =
+            blockTime
+            ? formatTime(blockTime)
+            : "";
+
+        }
+
+        catch(e){
+
+            document.getElementById("block-height-time").innerText =
+            "";
+
+console.error(e);
+
+        }
+
+document.getElementById("version-value").innerText =
+        (json.result?.version ?? "—");
+
+}
+
+    catch(e){
+
+document.getElementById("block-height-value").innerText =
+        "—";
+
+document.getElementById("version-value").innerText =
+        "—";
+
+console.error(e);
+
+    }
+
+}
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light");
+
+localStorage.setItem(
+        "theme",
+        document.body.classList.contains("light")
+        ? "light"
+        : "dark"
+    );
+
+}
+
+function updateMuteIcon(){
+
+    document.getElementById("mute-toggle").innerText =
+    muted ? "🔇" : "🔊";
+
+}
+
+function toggleMute(){
+
+    muted = !muted;
+
+localStorage.setItem(
+        "muted",
+        muted ? "true" : "false"
+    );
+
+updateMuteIcon();
+
+}
+
+if(localStorage.getItem("theme")==="light"){
+
+    document.body.classList.add("light");
+
+}
+
+updateMuteIcon();
+
+function parseHashRoute(hash){
+
+    let match =
+    hash.match(/^#address\/(.+)$/);
+
+    if(match){
+
+        return {
+            type: "address",
+            value: decodeURIComponent(match[1])
+        };
+
+    }
+
+match =
+    hash.match(/^#asset\/(.+)$/);
+
+    if(match){
+
+        return {
+            type: "asset",
+            value: decodeURIComponent(match[1])
+        };
+
+    }
+
+match =
+    hash.match(/^#tx\/(.+)$/);
+
+    if(match){
+
+        return {
+            type: "tx",
+            value: decodeURIComponent(match[1])
+        };
+
+    }
+
+return null;
+
+}
+
+window.addEventListener("popstate", ()=>{
+
+    const route =
+    parseHashRoute(location.hash);
+
+if(route?.type === "address"){
+
+        showBalances(route.value, false);
+
+    }
+
+    else if(route?.type === "asset"){
+
+        showAssetInfo(route.value, false);
+
+    }
+
+    else if(route?.type === "tx"){
+
+        showTransactionDetail(route.value, undefined, false);
+
+    }
+
+    else {
+
+        document.getElementById("balance-modal").classList.remove("open");
+        document.getElementById("asset-modal").classList.remove("open");
+        document.getElementById("tx-detail-modal").classList.remove("open");
+
+    }
+
+});
+
+const initialRoute =
+parseHashRoute(location.hash);
+
+if(initialRoute?.type === "address"){
+
+    showBalances(initialRoute.value, false);
+
+}
+
+else if(initialRoute?.type === "asset"){
+
+    showAssetInfo(initialRoute.value, false);
+
+}
+
+else if(initialRoute?.type === "tx"){
+
+    showTransactionDetail(initialRoute.value, undefined, false);
+
+}
+
+document.addEventListener("keydown", (e)=>{
+
+    if(e.key !== "Escape")
+        return;
+
+    if(document.getElementById("balance-modal").classList.contains("open"))
+        closeBalanceModal();
+
+    if(document.getElementById("asset-modal").classList.contains("open"))
+        closeAssetModal();
+
+    if(document.getElementById("tx-detail-modal").classList.contains("open"))
+        closeTxDetailModal();
+
+    if(document.getElementById("search-modal").classList.contains("open"))
+        closeSearchModal();
+
+    if(document.getElementById("preferences-modal").classList.contains("open"))
+        closePreferencesModal();
+
+});
+
+
+document.addEventListener("keydown", (e)=>{
+
+    if(e.key.toLowerCase() !== "t")
+        return;
+
+    if(e.ctrlKey || e.altKey || e.metaKey)
+        return;
+
+    const tag =
+    e.target.tagName;
+
+    if(tag === "INPUT" || tag === "TEXTAREA")
+        return;
+
+    document.body.classList.toggle("hide-status-fee");
+
+    adjustPanelWidths();
+
+});
+
+
+document.addEventListener("keydown", (e)=>{
+
+    if(e.key.toLowerCase() !== "f")
+        return;
+
+    if(e.ctrlKey || e.altKey || e.metaKey)
+        return;
+
+    const tag =
+    e.target.tagName;
+
+    if(tag === "INPUT" || tag === "TEXTAREA")
+        return;
+
+    e.preventDefault();
+
+    openSearchModal();
+
+});
+
+
+document.addEventListener("keydown", (e)=>{
+
+    if(e.key.toLowerCase() !== "z")
+        return;
+
+    if(e.ctrlKey || e.altKey || e.metaKey)
+        return;
+
+    const tag =
+    e.target.tagName;
+
+    if(tag === "INPUT" || tag === "TEXTAREA")
+        return;
+
+    e.preventDefault();
+
+    openPreferencesModal();
+
+});
+
+applyColumnWidths();
+initColumnResize();
+adjustPanelWidths();
+
+window.addEventListener("resize", adjustPanelWidths);
+
+loadTransactions();
+loadMempool();
+loadNodeInfo();
+
+setInterval(
+    loadMempool,
+    20000
+);
+
+setInterval(
+    loadNodeInfo,
+    20000
+);
+
+setInterval(
+    renderTransactionRows,
+    40000
+);
+
+</script>
+
+</body>
+</html>
