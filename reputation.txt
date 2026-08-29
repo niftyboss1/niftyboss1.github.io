@@ -2,6 +2,13 @@ last_checked,trust_level,dispenser_address
 2026-08,safe,bc1qe3ayzcnp8drwnqhk0aer9w9s6yzrd6e6kskvx6
 2026-08,safe,169vbcdKrAEfX7VjHj5EdrCxSsA8fRhmbT
 2026-08,safe,bc1q0wlpxctzv0fm9qprrcplmn9t93hkr9ydupf8n0
+2026-08,safe,13NWfMM5g66aCHRDx9tryZfs5p4SZ8jY8Z
+2026-08,safe,1B2RJHaRS1Fdp1Ggptk9sCkw1nSnnQXwFi
+2026-08,safe,1Ea7GFTA8cBNcpKNQsVnXgXB4RUFmkCWvM
+2026-08,safe,1GyxKhKArWMZ1zDNfEqswdsWo9vYSiDWhL
+2026-08,safe,13rkcDstjZqxdXUPJe92K398T6EFwgTzri
+2026-08,safe,bc1qjnwfwpkdfve57u6488wajvmdv8mrh2hug3qhgm
+2026-08,safe,15AaPbjutocUSnwECuVpF29sSF9DpvMbZd
 2026-08,safe,1H8mGPcvv2Ess3jxCEsTd4B4gkYiia9Ubq
 2026-08,safe,1KeETBiLUiLRWBqXxM3Lk1vweCJcxgvs4y
 2026-08,safe,1LnYFKsS575LqYKTqywaSgvVBe3NUxm673
