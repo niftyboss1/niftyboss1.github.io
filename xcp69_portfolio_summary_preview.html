@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>XCP-69 Watch Wallet</title>
+
+<style>
+    :root {
+        color-scheme: dark;
+        --bg: #0b1020;
+        --panel: #111a2d;
+        --panel-raised: #172238;
+        --input: #0c1425;
+        --border: #263650;
+        --border-soft: #1d2a40;
+        --text: #e5edf8;
+        --muted: #91a1b8;
+        --accent: #7dd3fc;
+        --accent-hover: #bae6fd;
+        --row-hover: #17253b;
+        --tooltip: #0a1221;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        padding: 36px 24px 48px;
+        background: radial-gradient(ellipse at top left, #14223a 0, var(--bg) 55%);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    body > h1,
+    body > #status,
+    body > #addresses,
+    body > br,
+    body > button,
+    body > label,
+    body > table {
+        width: 100%;
+        max-width: 1080px;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+
+    h1 {
+        font-size: clamp(24px, 3vw, 30px);
+        font-weight: 650;
+        letter-spacing: -0.035em;
+        margin-top: 0;
+        margin-bottom: 5px;
+    }
+
+    #status {
+        color: var(--muted);
+        margin-top: 0;
+        margin-bottom: 22px;
+        font-size: 13px;
+    }
+
+    textarea {
+        display: block;
+        width: 100%;
+        max-width: 1080px;
+        height: 4.5em;
+    min-height: 4.5em;
+        margin: 0 auto;
+        padding: 13px 15px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--input);
+        color: var(--text);
+        font: 13px/1.55 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        resize: vertical;
+        outline: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    textarea::placeholder { color: #687991; }
+    textarea:focus {
+        border-color: #3b82a8;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, .10);
+    }
+
+    body > br { display: none; }
+
+    .controls {
+        width: 100%;
+        max-width: 1080px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    button {
+        display: inline-flex !important;
+        width: auto !important;
+        margin-top: 14px;
+        margin-bottom: 0;
+        padding: 9px 16px;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #287da3;
+        border-radius: 8px;
+        background: #155477;
+        color: #f0f9ff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+
+    button:hover:not(:disabled) {
+        background: #1b668d;
+        border-color: #38bdf8;
+    }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button:disabled { opacity: .55; cursor: wait; }
+
+    label {
+        display: flex !important;
+        width: fit-content !important;
+        max-width: 100%;
+        margin: 13px 0 0;
+        align-items: center;
+        gap: 8px;
+        color: #b9c7d9;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .controls button {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        accent-color: #38bdf8;
+        cursor: pointer;
+    }
+
+    table {
+        display: table !important;
+        width: 100%;
+        max-width: 1080px;
+        margin: 26px auto 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: fixed;
+        overflow: visible;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        background: rgba(17, 26, 45, .88);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, .16);
+    }
+
+    /* Keep the header and Total row fixed while limiting the body to ~6 rows. */
+    thead, tfoot {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    tbody {
+        display: block;
+        max-height: 276px;
+        overflow-y: auto;
+        scrollbar-gutter: stable;
+    }
+
+    tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    th, td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-soft);
+        vertical-align: middle;
+    }
+
+    th {
+        background: #141f34;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .075em;
+        text-transform: uppercase;
+        text-align: left;
+        white-space: nowrap;
+        border-bottom: 1px solid var(--border);
+    }
+
+    th:first-child { border-top-left-radius: 10px; }
+    th:last-child { border-top-right-radius: 10px; }
+
+    th:nth-child(2), td:nth-child(2),
+    th:nth-child(3), td:nth-child(3),
+    th:nth-child(4), td:nth-child(4) {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+    }
+
+    tbody tr { transition: background .12s ease; }
+    tbody tr:hover td { background: var(--row-hover); }
+    tbody tr:last-child td { border-bottom: 1px solid var(--border); }
+    tbody td:first-child {
+        color: #c4e8ff;
+        font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        font-weight: 600;
+        overflow-wrap: anywhere;
+    }
+
+    .balance {
+        position: relative;
+        cursor: help;
+        font-variant-numeric: tabular-nums;
+        text-decoration: underline dotted #607b9a;
+        text-underline-offset: 3px;
+    }
+
+    .tooltip {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 7px);
+        z-index: 10;
+        min-width: 360px;
+        max-width: min(600px, 80vw);
+        max-height: 320px;
+        overflow: auto;
+        padding: 10px 13px;
+        background: var(--tooltip);
+        color: var(--text);
+        border: 1px solid #344965;
+        border-radius: 9px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, .45);
+        text-align: left;
+        font-size: 12px;
+        font-weight: normal;
+        white-space: normal;
+    }
+
+    /* Tooltips are temporarily moved to body so the scrollable tbody cannot clip them. */
+    .tooltip.is-floating {
+        display: block;
+        position: fixed;
+        z-index: 10000;
+        margin: 0;
+    }
+
+    .tooltip-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-soft);
+    }
+    .tooltip-row:last-child { border-bottom: none; }
+    .tooltip-address {
+        color: #b9d8f5;
+        font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        overflow-wrap: anywhere;
+    }
+    .tooltip-balance {
+        color: var(--text);
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+    }
+
+    tfoot td {
+        background: #141f34;
+        color: #dceafa;
+        font-weight: 700;
+        border-top: 1px solid #344965;
+        border-bottom: none;
+    }
+    tfoot td:first-child { border-bottom-left-radius: 10px; }
+    tfoot td:last-child { border-bottom-right-radius: 10px; }
+
+    @media (max-width: 680px) {
+        body { padding: 24px 12px 32px; }
+        th, td { padding: 10px 9px; }
+        th { font-size: 10px; letter-spacing: .035em; white-space: normal; }
+        tbody td:first-child { font-size: 12px; }
+        .tooltip { min-width: 260px; }
+        .tooltip.is-floating { max-width: calc(100vw - 24px); }
+    }
+</style>
+
+</head>
+
+<body>
+
+<h1>XCP-69 Watch Wallet</h1>
+
+<div id="status">Enter addresses and load balances.</div>
+
+<textarea
+    id="addresses"
+    placeholder="One Counterparty address per line"></textarea>
+
+<br>
+
+<div class="controls">
+    <button id="loadBtn">Load Balances</button>
+
+    <label>
+        <input type="checkbox" id="ignoreDust">
+        Ignore dust amounts (balances < 1.0)
+    </label>
+</div>
+
+<table>
+
+<thead>
+    <tr>
+        <th>XCP-69 token</th>
+        <th>Balance</th>
+        <th>XCP value</th>
+        <th>XCP Value at mint price</th>
+    </tr>
+</thead>
+
+<tbody id="tokens"></tbody>
+
+<tfoot>
+    <tr>
+        <td>Total</td>
+        <td id="assetCount">—</td>
+        <td id="totalXcpValue">—</td>
+        <td id="totalMintValue">—</td>
+    </tr>
+</tfoot>
+</table>
+
+<script>
+
+const CP_API =
+    "https://api.counterparty.io:4000/v2";
+
+const POOLS_API =
+    `${CP_API}/pools?verbose=true`;
+
+const BALANCES_API =
+    `${CP_API}/addresses/balances`;
+
+const XCP69_PREFIX =
+    "https://xcp.fun";
+
+const XCP69_EXCEPTIONS =
+    new Set([
+        "EVOLVEDPEPE",
+        "LORDFUN",
+        "MEMENOME",
+        "FAKEBANG"
+    ]);
+
+const DIVISIBILITY =
+    100000000;
+
+let currentAggregated = null;
+
+
+/*
+ * Restore saved addresses.
+ */
+document.getElementById("addresses").value =
+    localStorage.getItem("xcp69_watch_addresses") || "";
+
+
+/*
+ * Format balances without unnecessary trailing
+ * decimal zeroes, while retaining precision.
+ */
+function formatBalance(value) {
+
+    return Number(value).toLocaleString("en-US", {
+        maximumFractionDigits: 8
+    });
+
+}
+
+
+/*
+ * Escape HTML before inserting addresses into
+ * the tooltip.
+ */
+function escapeHtml(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/*
+ * Read and normalize the portfolio addresses.
+ */
+function getAddresses() {
+
+    return [
+        ...new Set(
+            document.getElementById("addresses")
+                .value
+                .split("\n")
+                .map(a => a.trim())
+                .filter(Boolean)
+        )
+    ];
+
+}
+
+
+/*
+ * Discover all XCP-69 assets from the pools API.
+ *
+ * An asset qualifies when:
+ *
+ *   description starts with https://xcp.fun
+ *
+ * or it is one of the explicit exceptions.
+ */
+async function loadXCP69Assets() {
+
+    const response =
+        await fetch(POOLS_API);
+
+    if (!response.ok) {
+        throw new Error(
+            `Pools API HTTP ${response.status}`
+        );
+    }
+
+    const json =
+        await response.json();
+
+    const pools =
+        json.result || [];
+
+    const assets =
+        new Set();
+
+    for (const pool of pools) {
+
+        let token;
+        let description;
+
+
+        /*
+         * XCP can be either side of the pool.
+         * The other side is the token.
+         */
+
+        if (pool.asset_a === "XCP") {
+
+            token = pool.asset_b;
+
+            description =
+                pool.asset_b_info?.description || "";
+
+        }
+
+        else if (pool.asset_b === "XCP") {
+
+            token = pool.asset_a;
+
+            description =
+                pool.asset_a_info?.description || "";
+
+        }
+
+        else {
+            continue;
+        }
+
+
+        const isXCP69 =
+            description.startsWith(XCP69_PREFIX) ||
+            XCP69_EXCEPTIONS.has(token);
+
+        if (isXCP69) {
+            assets.add(token);
+        }
+
+    }
+
+    return assets;
+
+}
+
+
+/*
+ * Fetch all Counterparty balances for the portfolio.
+ */
+async function loadBalances(addresses) {
+
+    const url =
+        `${BALANCES_API}?limit=1000&addresses=${encodeURIComponent(addresses.join(","))}`;
+
+    const response =
+        await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `Balances API HTTP ${response.status}`
+        );
+    }
+
+    return await response.json();
+
+}
+
+/*
+ * Quote a token balance in XCP using the token/XCP pool.
+ * Only balances strictly above 1.0 XCP are quoted.
+ */
+async function fetchXcpValue(asset, balance) {
+
+    if (balance <= 1.0) {
+        return null;
+    }
+
+    const unnormalizedBalance =
+        Math.round(balance * DIVISIBILITY);
+
+    const url =
+        `${CP_API}/pools/${encodeURIComponent(asset)}/XCP/quote?quantity=${unnormalizedBalance}&verbose=`;
+
+    const response =
+        await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `XCP quote API HTTP ${response.status} for ${asset}`
+        );
+    }
+
+    const json =
+        await response.json();
+
+    const poolOutput =
+        Number(json.result.pool_output);
+
+    if (!Number.isFinite(poolOutput)) {
+        throw new Error(
+            `Invalid pool_output for ${asset}`
+        );
+    }
+
+    return poolOutput / DIVISIBILITY;
+}
+
+
+/*
+ * Build the aggregated XCP-69 portfolio.
+ *
+ * Result:
+ *
+ * {
+ *   TOKEN: {
+ *       total: 123,
+ *       holders: [
+ *           { address: "...", balance: 100 },
+ *           ...
+ *       ]
+ *   }
+ * }
+ */
+function aggregateBalances(
+    balancesJson,
+    xcp69Assets,
+    portfolioAddresses
+) {
+
+    const aggregated = {};
+
+    /*
+     * Initialize every known XCP-69 asset.
+     */
+    xcp69Assets.forEach(asset => {
+
+        aggregated[asset] = {
+            total: 0,
+            holders: []
+        };
+
+    });
+
+
+    /*
+     * The balances endpoint returns assets with
+     * an addresses array.
+     */
+    for (const assetData of balancesJson.result || []) {
+
+        const asset =
+            assetData.asset;
+
+        if (!xcp69Assets.has(asset)) {
+            continue;
+        }
+
+
+        for (const entry of assetData.addresses || []) {
+
+            const address =
+                entry.address;
+
+            /*
+             * Only consider addresses from the
+             * supplied watch list.
+             */
+            if (!portfolioAddresses.includes(address)) {
+                continue;
+            }
+
+
+            const quantity =
+                Number(entry.quantity || 0);
+
+
+            if (quantity <= 0) {
+                continue;
+            }
+
+
+            const balance =
+                quantity / DIVISIBILITY;
+
+
+            aggregated[asset].total +=
+                balance;
+
+            aggregated[asset].holders.push({
+                address,
+                balance
+            });
+
+        }
+
+    }
+
+
+    return aggregated;
+
+}
+
+
+/*
+ * Render the aggregated token table.
+ */
+async function renderTable(aggregated) {
+
+    const tbody =
+        document.getElementById("tokens");
+
+    tbody.innerHTML = "";
+
+    /*
+     * Only show XCP-69 assets actually held
+     * by at least one portfolio address.
+     */
+    const allTokens =
+        Object.entries(aggregated)
+            .filter(
+                ([, data]) =>
+                    data.total > 0
+            )
+            .sort(
+                ([, a], [, b]) =>
+                    b.total - a.total
+            );
+
+    /*
+     * Fetch XCP values only for balances above 1.0 XCP.
+     */
+    const xcpValues = {};
+
+    await Promise.all(
+        allTokens.map(async ([asset, data]) => {
+
+            if (data.total <= 1.0) {
+                xcpValues[asset] = null;
+                return;
+            }
+
+            try {
+                xcpValues[asset] =
+                    await fetchXcpValue(
+                        asset,
+                        data.total
+                    );
+            } catch (error) {
+                console.warn(
+                    `Could not fetch XCP value for ${asset}`,
+                    error
+                );
+                xcpValues[asset] = null;
+            }
+        })
+    );
+
+    const tokens = (document.getElementById("ignoreDust").checked
+        ? allTokens.filter(([, data]) => data.total >= 1.0)
+        : allTokens).sort(([assetA], [assetB]) => {
+            const valueA = xcpValues[assetA];
+            const valueB = xcpValues[assetB];
+            const validA = typeof valueA === "number" && Number.isFinite(valueA);
+            const validB = typeof valueB === "number" && Number.isFinite(valueB);
+
+            if (validA && validB) return valueB - valueA;
+            if (validA) return -1;
+            if (validB) return 1;
+            return 0;
+        });
+
+    let totalXcpValue = 0;
+    let totalMintValue = 0;
+
+    for (const [asset, data] of tokens) {
+
+        data.holders.sort(
+            (a, b) =>
+                b.balance - a.balance
+        );
+
+        const tooltipRows =
+            data.holders.map(holder => `
+                <div class="tooltip-row">
+
+                    <span class="tooltip-address">
+                        ${escapeHtml(holder.address)}
+                    </span>
+
+                    <span class="tooltip-balance">
+                        ${formatBalance(holder.balance)}
+                    </span>
+
+                </div>
+            `).join("");
+
+        const xcpValue =
+            xcpValues[asset];
+
+        // At mint price: 1,000,000 tokens = 10 XCP.
+        const mintValue = data.total * 10 / 1000000;
+        totalMintValue += mintValue;
+
+        if (
+            typeof xcpValue === "number" &&
+            Number.isFinite(xcpValue)
+        ) {
+            totalXcpValue += xcpValue;
+        }
+
+        const tr =
+            document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>
+                ${escapeHtml(asset)}
+            </td>
+
+            <td class="balance">
+                ${formatBalance(data.total)}
+
+                <div class="tooltip">
+                    ${tooltipRows}
+                </div>
+            </td>
+
+            <td>
+                ${
+                    xcpValue === null ||
+                    xcpValue === undefined
+                        ? "—"
+                        : formatBalance(xcpValue)
+                }
+            </td>
+
+            <td>
+                ${formatBalance(mintValue)}
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+
+        // Float the holder tooltip outside the scrollable table body to prevent clipping.
+        const balanceCell = tr.querySelector(".balance");
+        const tooltip = balanceCell.querySelector(".tooltip");
+        let hideTooltipTimer;
+
+        function hideFloatingTooltip() {
+            tooltip.classList.remove("is-floating");
+            tooltip.style.left = "";
+            tooltip.style.top = "";
+            tooltip.style.maxHeight = "";
+            tooltip.style.display = "";
+            balanceCell.appendChild(tooltip);
+        }
+
+        function positionFloatingTooltip() {
+            const rect = balanceCell.getBoundingClientRect();
+            tooltip.classList.add("is-floating");
+            tooltip.style.display = "block";
+            tooltip.style.maxHeight = Math.min(320, window.innerHeight - 24) + "px";
+
+            const tipRect = tooltip.getBoundingClientRect();
+            const left = Math.max(12, Math.min(
+                rect.right - tipRect.width,
+                window.innerWidth - tipRect.width - 12
+            ));
+            let top = rect.bottom;
+            if (top + tipRect.height > window.innerHeight - 12) {
+                top = rect.top - tipRect.height;
+            }
+            top = Math.max(12, Math.min(top, window.innerHeight - tipRect.height - 12));
+
+            tooltip.style.left = left + "px";
+            tooltip.style.top = top + "px";
+            document.body.appendChild(tooltip);
+        }
+
+        balanceCell.addEventListener("mouseenter", () => {
+            clearTimeout(hideTooltipTimer);
+            positionFloatingTooltip();
+        });
+
+        balanceCell.addEventListener("mouseleave", () => {
+            hideTooltipTimer = setTimeout(() => {
+                if (!tooltip.matches(":hover")) hideFloatingTooltip();
+            }, 100);
+        });
+
+        tooltip.addEventListener("mouseenter", () => clearTimeout(hideTooltipTimer));
+        tooltip.addEventListener("mouseleave", hideFloatingTooltip);
+        tbody.addEventListener("scroll", () => {
+            if (tooltip.classList.contains("is-floating")) hideFloatingTooltip();
+        }, { passive: true });
+    }
+
+    document.getElementById("assetCount")
+        .textContent = tokens.length;
+
+    document.getElementById("totalXcpValue")
+        .textContent = tokens.some(
+            ([asset, data]) =>
+                data.total > 1.0 &&
+                typeof xcpValues[asset] === "number"
+        )
+            ? formatBalance(totalXcpValue)
+            : "—";
+
+    document.getElementById("totalMintValue")
+        .textContent = formatBalance(totalMintValue);
+
+    return tokens.length;
+}
+
+
+/*
+ * Main loader.
+ */
+async function loadWallet() {
+
+    const button =
+        document.getElementById("loadBtn");
+
+    const status =
+        document.getElementById("status");
+
+    button.disabled = true;
+
+    try {
+
+        const addresses =
+            getAddresses();
+
+
+        if (!addresses.length) {
+
+            throw new Error(
+                "Please enter at least one address."
+            );
+
+        }
+
+
+        localStorage.setItem(
+            "xcp69_watch_addresses",
+            addresses.join("\n")
+        );
+
+
+        status.textContent =
+            "Discovering XCP-69 assets...";
+
+
+        const xcp69Assets =
+            await loadXCP69Assets();
+
+
+        status.textContent =
+            `Found ${xcp69Assets.size} XCP-69 assets. Loading balances...`;
+
+
+        const balancesJson =
+            await loadBalances(addresses);
+
+
+        status.textContent =
+            "Calculating portfolio balances...";
+
+
+        const aggregated =
+            aggregateBalances(
+                balancesJson,
+                xcp69Assets,
+                addresses
+            );
+
+        currentAggregated = aggregated;
+
+
+        status.textContent =
+            "Calculating XCP values...";
+
+        const count =
+            await renderTable(aggregated);
+
+
+        status.textContent =
+            `${count} XCP-69 assets held across ${addresses.length} addresses`;
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "Error: " + error.message;
+
+    }
+
+    finally {
+
+        button.disabled = false;
+
+    }
+
+}
+
+
+document.getElementById("loadBtn")
+    .addEventListener("click", loadWallet);
+
+document.getElementById("ignoreDust")
+    .addEventListener("change", async () => {
+        if (currentAggregated) {
+            await renderTable(currentAggregated);
+        }
+    });
+
+</script>
+
+</body>
+</html>
